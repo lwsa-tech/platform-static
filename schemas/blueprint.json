@@ -25,6 +25,36 @@
             "type": "integer",
             "description": "Internal port where container listens, passed as PORT env var. Default 10000"
           },
+          "additionalPorts": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["port"],
+              "properties": {
+                "port": {
+                  "type": "integer",
+                  "description": "Additional port where container listens"
+                },
+                "expose": {
+                  "type": "object",
+                  "properties": {
+                    "enabled": {
+                      "type": "boolean"
+                    },
+                    "sourceRanges": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "pattern": "^([0-9]{1,3}\\.){3}[0-9]{1,3}/[0-9]{1,2}$"
+                      }
+                    }
+                  },
+                  "required": ["enabled"]
+                }
+              }
+            },
+            "description": "Additional ports where container listens"
+          },
           "replicas": {
             "type": "integer",
             "minimum": 1,
