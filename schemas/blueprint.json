@@ -76,10 +76,6 @@
               "enabled": {
                 "type": "boolean"
               },
-              "port": {
-                "type": "integer",
-                "description": "Port to expose externally. Defaults to container port"
-              },
               "sourceRanges": {
                 "type": "array",
                 "items": {
