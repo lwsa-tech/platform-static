@@ -70,6 +70,54 @@
             "minimum": 1,
             "description": "Maximum number of replicas for autoscaling"
           },
+          "scaleTriggers": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "description": "ScaleTriggers reference the scaler that will be used",
+              "required": [
+                "metadata",
+                "type"
+              ],
+              "properties": {
+                "authenticationRef": {
+                  "type": "object",
+                  "description": "AuthenticationRef points to the TriggerAuthentication or ClusterTriggerAuthentication object that is used to authenticate the scaler with the environment",
+                  "required": [
+                    "name"
+                  ],
+                  "properties": {
+                    "kind": {
+                      "type": "string",
+                      "description": "Kind of the resource being referred to. Defaults to TriggerAuthentication."
+                    },
+                    "name": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "metadata": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string"
+                  }
+                },
+                "metricType": {
+                  "type": "string",
+                  "description": "MetricTargetType specifies the type of metric being targeted, and should be either \"Value\", \"AverageValue\", or \"Utilization\""
+                },
+                "name": {
+                  "type": "string"
+                },
+                "type": {
+                  "type": "string"
+                },
+                "useCachedMetrics": {
+                  "type": "boolean"
+                }
+              }
+            }
+          },
           "command": {
             "type": "array",
             "items": {
