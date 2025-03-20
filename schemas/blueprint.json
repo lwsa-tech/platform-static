@@ -125,6 +125,13 @@
             },
             "description": "Command to run in the container"
           },
+          "args": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Arguments to the command in the container"
+          },
           "ingress": {
             "type": "object",
             "properties": {
