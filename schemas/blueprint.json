@@ -676,6 +676,56 @@
           }
         }
       }
+    },
+    "messageBrokers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "type", "plan", "size"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Unique name for the message broker"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["rabbitmq"],
+            "description": "Type of message broker"
+          },
+          "plan": {
+            "type": "string",
+            "enum": ["pico", "nano", "micro", "small", "medium", "large", "2xlarge", "4xlarge"],
+            "description": "Resource plan for the message broker"
+          },
+          "size": {
+            "type": "string",
+            "pattern": "^[0-9]+Gi$",
+            "description": "Storage size for the message broker"
+          },
+          "replicas": {
+            "type": "integer",
+            "minimum": 1,
+            "default": 3,
+            "description": "Number of replicas. Default 3"
+          },
+          "expose": {
+            "type": "object",
+            "properties": {
+              "enabled": {
+                "type": "boolean"
+              },
+              "sourceRanges": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^([0-9]{1,3}\\.){3}[0-9]{1,3}/[0-9]{1,2}$"
+                }
+              }
+            },
+            "required": ["enabled"]
+          }
+        }
+      }
     }
   }
 }
