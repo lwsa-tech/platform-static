@@ -76,8 +76,8 @@
               "type": "object",
               "description": "ScaleTriggers reference the scaler that will be used",
               "required": [
-                "metadata",
-                "type"
+                "type",
+                "metadata"
               ],
               "properties": {
                 "authenticationRef": {
@@ -96,24 +96,24 @@
                     }
                   }
                 },
-                "metadata": {
-                  "type": "object",
-                  "additionalProperties": {
-                    "type": "string"
-                  }
-                },
-                "metricType": {
-                  "type": "string",
-                  "description": "MetricTargetType specifies the type of metric being targeted, and should be either \"Value\", \"AverageValue\", or \"Utilization\""
-                },
                 "name": {
                   "type": "string"
                 },
                 "type": {
                   "type": "string"
                 },
+                "metricType": {
+                  "type": "string",
+                  "description": "MetricTargetType specifies the type of metric being targeted, and should be either \"Value\", \"AverageValue\", or \"Utilization\""
+                },
                 "useCachedMetrics": {
                   "type": "boolean"
+                },
+                "metadata": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string"
+                  }
                 }
               }
             }
