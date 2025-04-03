@@ -12,6 +12,12 @@
             "type": "string",
             "description": "Unique name for the service"
           },
+          "type": {
+            "type": "string",
+            "enum": ["app", "cron"],
+            "description": "Type of service - 'app' for regular applications, 'cron' for scheduled jobs",
+            "default": "app"
+          },
           "image": {
             "type": "string",
             "description": "Docker image to use"
