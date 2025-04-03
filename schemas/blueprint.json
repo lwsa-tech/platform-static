@@ -7,6 +7,18 @@
       "items": {
         "type": "object",
         "required": ["name", "image", "plan"],
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "type": { "const": "cron" }
+              }
+            },
+            "then": {
+              "required": ["schedule"]
+            }
+          }
+        ],
         "properties": {
           "name": {
             "type": "string",
@@ -17,6 +29,10 @@
             "enum": ["app", "cron"],
             "description": "Type of service - 'app' for regular applications, 'cron' for scheduled jobs",
             "default": "app"
+          },
+          "schedule": {
+            "type": "string",
+            "description": "Cron schedule string in Kubernetes format (e.g., '*/5 * * * *'). Required when type is 'cron'."
           },
           "image": {
             "type": "string",
