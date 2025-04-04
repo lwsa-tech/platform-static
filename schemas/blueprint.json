@@ -398,7 +398,7 @@
         "allOf": [
           {
             "if": {
-              "not": { "properties": { "type": { "const": "cron" } } }
+              "properties": { "type": { "const": "app" } }
             },
             "then": {
                "required": ["name", "image", "plan"],
