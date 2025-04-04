@@ -7,24 +7,6 @@
       "items": {
         "type": "object",
         "required": ["name", "image", "plan"],
-        "allOf": [
-          {
-            "if": {
-              "properties": {
-                "type": { "const": "cron" }
-              }
-            },
-            "then": {
-              "required": ["schedule"],
-              "properties": {
-                "schedule": {
-                  "type": "string",
-                  "description": "Cron schedule string in Kubernetes format (e.g., '*/5 * * * *'). Required when type is 'cron'."
-                }
-              }
-            }
-          }
-        ],
         "properties": {
           "name": {
             "type": "string",
