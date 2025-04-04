@@ -12,12 +12,6 @@
             "type": "string",
             "description": "Unique name for the service"
           },
-          "type": {
-            "type": "string",
-            "enum": ["app", "cron"],
-            "default": "app",
-            "description": "Type of the service (application or cron job)"
-          },
           "image": {
             "type": "string",
             "description": "Docker image to use"
@@ -389,44 +383,246 @@
               }
             },
             "required": ["enabled"]
+          }
+        }
+      }
+    },
+    "cronjobs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "image", "plan", "schedule"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Unique name for the cron job"
+          },
+          "image": {
+            "type": "string",
+            "description": "Docker image to use"
+          },
+          "plan": {
+            "type": "string",
+            "enum": ["pico", "nano", "micro", "small", "medium", "large", "2xlarge", "4xlarge"],
+            "description": "Resource plan for the cron job"
+          },
+          "command": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Command to run in the container"
+          },
+          "args": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Arguments to the command in the container"
+          },
+          "mountVolumes": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["name", "path"],
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "path": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "envVars": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "envVarsFrom": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "secrets": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["name"],
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "mappings": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              },
+              "configMaps": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["name"],
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "mappings": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              },
+              "dbServers": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["name", "type"],
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "type": {
+                      "type": "string",
+                      "enum": ["pxc", "cnpg", "dragonfly", "psmdb", "ferretdb"]
+                    },
+                    "mappings": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              },
+              "searches": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["name", "type"],
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "type": {
+                      "type": "string",
+                      "enum": ["elasticsearch"]
+                    },
+                    "mappings": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              },
+              "messageBrokers": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["name", "type"],
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "type": {
+                      "type": "string",
+                      "enum": ["rabbitmq"]
+                    },
+                    "mappings": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "allowToServices": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["namespace", "name"],
+              "properties": {
+                "namespace": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "egress": {
+            "type": "object",
+            "properties": {
+              "enabled": {
+                "type": "boolean"
+              },
+              "toCIDRs": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["range"],
+                  "properties": {
+                    "range": {
+                      "type": "string",
+                      "pattern": "^([0-9]{1,3}\\.){3}[0-9]{1,3}/[0-9]{1,2}$"
+                    },
+                    "port": {
+                      "type": "integer"
+                    },
+                    "protocol": {
+                      "type": "string",
+                      "enum": ["TCP", "UDP"]
+                    }
+                  }
+                }
+              },
+              "toFQDNs": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "pattern": {
+                      "type": "string"
+                    },
+                    "host": {
+                      "type": "string"
+                    },
+                    "port": {
+                      "type": "integer"
+                    },
+                    "protocol": {
+                      "type": "string",
+                      "enum": ["TCP", "UDP"]
+                    }
+                  },
+                  "oneOf": [
+                    { "required": ["pattern"] },
+                    { "required": ["host"] }
+                  ]
+                }
+              }
+            },
+            "required": ["enabled"]
           },
           "schedule": {
             "type": "string",
             "description": "Cron schedule string (e.g., '*/5 * * * *')"
           }
-        },
-        "allOf": [
-          {
-            "if": {
-              "properties": { "type": { "const": "app" } }
-            },
-            "then": {
-               "required": ["name", "image", "plan"],
-               "properties": {
-                 "schedule": false
-               }
-            }
-          },
-          {
-            "if": {
-              "properties": { "type": { "const": "cron" } }
-            },
-            "then": {
-              "required": ["name", "image", "plan", "schedule"],
-              "properties": {
-                "port": false,
-                "additionalPorts": false,
-                "replicas": false,
-                "minReplicas": false,
-                "maxReplicas": false,
-                "scaleTriggers": false,
-                "ingress": false,
-                "expose": false,
-                "allowFromServices": false
-              }
-            }
-          }
-        ]
+        }
       }
     },
     "dbServers": {
