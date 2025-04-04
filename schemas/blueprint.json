@@ -15,7 +15,13 @@
               }
             },
             "then": {
-              "required": ["schedule"]
+              "required": ["schedule"],
+              "properties": {
+                "schedule": {
+                  "type": "string",
+                  "description": "Cron schedule string in Kubernetes format (e.g., '*/5 * * * *'). Required when type is 'cron'."
+                }
+              }
             }
           }
         ],
@@ -29,10 +35,6 @@
             "enum": ["app", "cron"],
             "description": "Type of service - 'app' for regular applications, 'cron' for scheduled jobs",
             "default": "app"
-          },
-          "schedule": {
-            "type": "string",
-            "description": "Cron schedule string in Kubernetes format (e.g., '*/5 * * * *'). Required when type is 'cron'."
           },
           "image": {
             "type": "string",
