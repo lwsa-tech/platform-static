@@ -398,6 +398,17 @@
         "allOf": [
           {
             "if": {
+              "not": { "properties": { "type": { "const": "cron" } } }
+            },
+            "then": {
+               "required": ["name", "image", "plan"],
+               "properties": {
+                 "schedule": false
+               }
+            }
+          },
+          {
+            "if": {
               "properties": { "type": { "const": "cron" } }
             },
             "then": {
@@ -413,17 +424,6 @@
                 "expose": false,
                 "allowFromServices": false
               }
-            }
-          },
-          {
-            "if": {
-              "not": { "properties": { "type": { "const": "cron" } } }
-            },
-            "then": {
-               "required": ["name", "image", "plan"],
-               "properties": {
-                 "schedule": false
-               }
             }
           }
         ]
