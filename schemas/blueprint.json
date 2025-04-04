@@ -12,6 +12,12 @@
             "type": "string",
             "description": "Unique name for the service"
           },
+          "type": {
+            "type": "string",
+            "enum": ["app", "cron"],
+            "default": "app",
+            "description": "Type of the service (application or cron job)"
+          },
           "image": {
             "type": "string",
             "description": "Docker image to use"
@@ -383,8 +389,44 @@
               }
             },
             "required": ["enabled"]
+          },
+          "schedule": {
+            "type": "string",
+            "description": "Cron schedule string (e.g., '*/5 * * * *')"
           }
-        }
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": { "type": { "const": "cron" } }
+            },
+            "then": {
+              "required": ["name", "image", "plan", "schedule"],
+              "properties": {
+                "port": false,
+                "additionalPorts": false,
+                "replicas": false,
+                "minReplicas": false,
+                "maxReplicas": false,
+                "scaleTriggers": false,
+                "ingress": false,
+                "expose": false,
+                "allowFromServices": false
+              }
+            }
+          },
+          {
+            "if": {
+              "not": { "properties": { "type": { "const": "cron" } } }
+            },
+            "then": {
+               "required": ["name", "image", "plan"],
+               "properties": {
+                 "schedule": false
+               }
+            }
+          }
+        ]
       }
     },
     "dbServers": {
