@@ -18,7 +18,7 @@
           },
           "plan": {
             "type": "string",
-            "enum": ["pico", "nano", "micro", "small", "medium", "large", "2xlarge", "4xlarge"],
+            "enum": ["pico", "nano", "micro", "small", "medium", "large", "xlarge", "2xlarge", "4xlarge"],
             "description": "Resource plan for the service"
           },
           "port": {
@@ -408,7 +408,7 @@
           },
           "plan": {
             "type": "string",
-            "enum": ["pico", "nano", "micro", "small", "medium", "large", "2xlarge", "4xlarge"],
+            "enum": ["pico", "nano", "micro", "small", "medium", "large", "xlarge", "2xlarge", "4xlarge"],
             "description": "Resource plan for the cron job"
           },
           "command": {
@@ -752,7 +752,7 @@
           },
           "plan": {
             "type": "string",
-            "enum": ["nano", "micro", "small", "medium", "large", "2xlarge"]
+            "enum": ["pico", "nano", "micro", "small", "medium", "large", "xlarge", "2xlarge", "4xlarge"]
           },
           "size": {
             "type": "string",
@@ -844,7 +844,7 @@
                   },
                   "plan": {
                     "type": "string",
-                    "enum": ["nano", "micro", "small", "medium", "large", "2xlarge"]
+                    "enum": ["pico", "nano", "micro", "small", "medium", "large", "xlarge", "2xlarge", "4xlarge"]
                   },
                   "size": {
                     "type": "string",
@@ -862,7 +862,7 @@
                   },
                   "plan": {
                     "type": "string",
-                    "enum": ["nano", "micro", "small", "medium", "large", "2xlarge"]
+                    "enum": ["pico", "nano", "micro", "small", "medium", "large", "xlarge", "2xlarge", "4xlarge"]
                   },
                   "size": {
                     "type": "string",
@@ -892,7 +892,7 @@
               },
               "plan": {
                 "type": "string",
-                "enum": ["nano", "micro", "small", "medium", "large", "2xlarge"]
+                "enum": ["pico", "nano", "micro", "small", "medium", "large", "xlarge", "2xlarge", "4xlarge"]
               }
             }
           }
@@ -971,7 +971,7 @@
           },
           "plan": {
             "type": "string",
-            "enum": ["pico", "nano", "micro", "small", "medium", "large", "2xlarge", "4xlarge"],
+            "enum": ["pico", "nano", "micro", "small", "medium", "large", "xlarge", "2xlarge", "4xlarge"],
             "description": "Resource plan for the message broker"
           },
           "size": {
