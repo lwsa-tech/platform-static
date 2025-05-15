@@ -305,32 +305,42 @@
               }
             }
           },
-          "allowFromServices": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "required": ["namespace", "name"],
-              "properties": {
-                "namespace": {
-                  "type": "string"
-                },
-                "name": {
-                  "type": "string"
+          "allowFrom": {
+            "type": "object",
+            "properties": {
+              "services": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["namespace", "name"],
+                  "properties": {
+                    "namespace": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    }
+                  }
                 }
               }
             }
           },
-          "allowToServices": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "required": ["namespace", "name"],
-              "properties": {
-                "namespace": {
-                  "type": "string"
-                },
-                "name": {
-                  "type": "string"
+          "allowTo": {
+            "type": "object",
+            "properties": {
+              "services": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["namespace", "name"],
+                  "properties": {
+                    "namespace": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    }
+                  }
                 }
               }
             }
@@ -559,17 +569,22 @@
               }
             }
           },
-          "allowToServices": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "required": ["namespace", "name"],
-              "properties": {
-                "namespace": {
-                  "type": "string"
-                },
-                "name": {
-                  "type": "string"
+          "allowTo": {
+            "type": "object",
+            "properties": {
+              "services": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["namespace", "name"],
+                  "properties": {
+                    "namespace": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    }
+                  }
                 }
               }
             }
@@ -807,17 +822,22 @@
               }
             }
           },
-          "allowToServices": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "required": ["namespace", "name"],
-              "properties": {
-                "namespace": {
-                  "type": "string"
-                },
-                "name": {
-                  "type": "string"
+          "allowTo": {
+            "type": "object",
+            "properties": {
+              "services": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["namespace", "name"],
+                  "properties": {
+                    "namespace": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    }
+                  }
                 }
               }
             }
