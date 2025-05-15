@@ -322,6 +322,36 @@
                     }
                   }
                 }
+              },
+              "cronjobs": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["namespace", "name"],
+                  "properties": {
+                    "namespace": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "jobs": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["namespace", "name"],
+                  "properties": {
+                    "namespace": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    }
+                  }
+                }
               }
             }
           },
