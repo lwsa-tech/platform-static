@@ -1009,7 +1009,11 @@
                 "type": { "const": "dragonfly" }
               }
             },
-            "then": {}
+            "then": {
+              "properties": {
+                "size": false
+              }
+            }
           },
           {
             "if": {
