@@ -1,11 +1,13 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
+  "additionalProperties": false,
   "properties": {
     "services": {
       "type": "array",
       "items": {
         "type": "object",
+        "additionalProperties": false,
         "required": ["name", "image", "plan"],
         "properties": {
           "name": {
@@ -29,6 +31,7 @@
             "type": "array",
             "items": {
               "type": "object",
+              "additionalProperties": false,
               "required": ["port"],
               "properties": {
                 "port": {
@@ -37,6 +40,7 @@
                 },
                 "expose": {
                   "type": "object",
+                  "additionalProperties": false,
                   "properties": {
                     "enabled": {
                       "type": "boolean"
@@ -75,6 +79,7 @@
             "items": {
               "type": "object",
               "description": "ScaleTriggers reference the scaler that will be used",
+              "additionalProperties": false,
               "required": [
                 "type",
                 "metadata"
@@ -82,6 +87,7 @@
               "properties": {
                 "authenticationRef": {
                   "type": "object",
+                  "additionalProperties": false,
                   "description": "AuthenticationRef points to the TriggerAuthentication or ClusterTriggerAuthentication object that is used to authenticate the scaler with the environment",
                   "required": [
                     "name"
@@ -134,6 +140,7 @@
           },
           "ingress": {
             "type": "object",
+            "additionalProperties": false,
             "properties": {
               "enabled": {
                 "type": "boolean"
@@ -157,6 +164,7 @@
           },
           "expose": {
             "type": "object",
+            "additionalProperties": false,
             "properties": {
               "enabled": {
                 "type": "boolean"
@@ -175,6 +183,7 @@
             "type": "array",
             "items": {
               "type": "object",
+              "additionalProperties": false,
               "required": ["name", "path"],
               "properties": {
                 "name": {
@@ -205,6 +214,7 @@
                 "type": "array",
                 "items": {
                   "type": "object",
+                  "additionalProperties": false,
                   "required": ["name"],
                   "properties": {
                     "name": {
@@ -223,6 +233,7 @@
                 "type": "array",
                 "items": {
                   "type": "object",
+                  "additionalProperties": false,
                   "required": ["name"],
                   "properties": {
                     "name": {
@@ -241,6 +252,7 @@
                 "type": "array",
                 "items": {
                   "type": "object",
+                  "additionalProperties": false,
                   "required": ["name", "type"],
                   "properties": {
                     "name": {
@@ -263,6 +275,7 @@
                 "type": "array",
                 "items": {
                   "type": "object",
+                  "additionalProperties": false,
                   "required": ["name", "type"],
                   "properties": {
                     "name": {
@@ -285,6 +298,7 @@
                 "type": "array",
                 "items": {
                   "type": "object",
+                  "additionalProperties": false,
                   "required": ["name", "type"],
                   "properties": {
                     "name": {
@@ -307,11 +321,13 @@
           },
           "allowFrom": {
             "type": "object",
+            "additionalProperties": false,
             "properties": {
               "services": {
                 "type": "array",
                 "items": {
                   "type": "object",
+                  "additionalProperties": false,
                   "required": ["namespace", "name"],
                   "properties": {
                     "namespace": {
@@ -327,6 +343,7 @@
                 "type": "array",
                 "items": {
                   "type": "object",
+                  "additionalProperties": false,
                   "required": ["namespace", "name"],
                   "properties": {
                     "namespace": {
@@ -342,11 +359,13 @@
           },
           "allowTo": {
             "type": "object",
+            "additionalProperties": false,
             "properties": {
               "services": {
                 "type": "array",
                 "items": {
                   "type": "object",
+                  "additionalProperties": false,
                   "required": ["namespace", "name"],
                   "properties": {
                     "namespace": {
@@ -362,6 +381,7 @@
           },
           "egress": {
             "type": "object",
+            "additionalProperties": false,
             "properties": {
               "enabled": {
                 "type": "boolean"
@@ -370,6 +390,7 @@
                 "type": "array",
                 "items": {
                   "type": "object",
+                  "additionalProperties": false,
                   "required": ["range"],
                   "properties": {
                     "range": {
@@ -390,6 +411,7 @@
                 "type": "array",
                 "items": {
                   "type": "object",
+                  "additionalProperties": false,
                   "properties": {
                     "pattern": {
                       "type": "string"
@@ -421,6 +443,7 @@
       "type": "array",
       "items": {
         "type": "object",
+        "additionalProperties": false,
         "required": ["name", "image", "plan", "schedule"],
         "properties": {
           "name": {
@@ -454,6 +477,7 @@
             "type": "array",
             "items": {
               "type": "object",
+              "additionalProperties": false,
               "required": ["name", "path"],
               "properties": {
                 "name": {
@@ -484,6 +508,7 @@
                 "type": "array",
                 "items": {
                   "type": "object",
+                  "additionalProperties": false,
                   "required": ["name"],
                   "properties": {
                     "name": {
@@ -502,6 +527,7 @@
                 "type": "array",
                 "items": {
                   "type": "object",
+                  "additionalProperties": false,
                   "required": ["name"],
                   "properties": {
                     "name": {
@@ -520,6 +546,7 @@
                 "type": "array",
                 "items": {
                   "type": "object",
+                  "additionalProperties": false,
                   "required": ["name", "type"],
                   "properties": {
                     "name": {
@@ -542,6 +569,7 @@
                 "type": "array",
                 "items": {
                   "type": "object",
+                  "additionalProperties": false,
                   "required": ["name", "type"],
                   "properties": {
                     "name": {
@@ -564,6 +592,7 @@
                 "type": "array",
                 "items": {
                   "type": "object",
+                  "additionalProperties": false,
                   "required": ["name", "type"],
                   "properties": {
                     "name": {
@@ -586,11 +615,13 @@
           },
           "allowTo": {
             "type": "object",
+            "additionalProperties": false,
             "properties": {
               "services": {
                 "type": "array",
                 "items": {
                   "type": "object",
+                  "additionalProperties": false,
                   "required": ["namespace", "name"],
                   "properties": {
                     "namespace": {
@@ -606,6 +637,7 @@
           },
           "egress": {
             "type": "object",
+            "additionalProperties": false,
             "properties": {
               "enabled": {
                 "type": "boolean"
@@ -614,6 +646,7 @@
                 "type": "array",
                 "items": {
                   "type": "object",
+                  "additionalProperties": false,
                   "required": ["range"],
                   "properties": {
                     "range": {
@@ -634,6 +667,7 @@
                 "type": "array",
                 "items": {
                   "type": "object",
+                  "additionalProperties": false,
                   "properties": {
                     "pattern": {
                       "type": "string"
@@ -669,6 +703,7 @@
       "type": "array",
       "items": {
         "type": "object",
+        "additionalProperties": false,
         "required": ["name", "image", "plan"],
         "properties": {
           "name": {
@@ -707,6 +742,7 @@
             "type": "array",
             "items": {
               "type": "object",
+              "additionalProperties": false,
               "required": ["name", "path"],
               "properties": {
                 "name": {
@@ -737,6 +773,7 @@
                 "type": "array",
                 "items": {
                   "type": "object",
+                  "additionalProperties": false,
                   "required": ["name"],
                   "properties": {
                     "name": {
@@ -755,6 +792,7 @@
                 "type": "array",
                 "items": {
                   "type": "object",
+                  "additionalProperties": false,
                   "required": ["name"],
                   "properties": {
                     "name": {
@@ -773,6 +811,7 @@
                 "type": "array",
                 "items": {
                   "type": "object",
+                  "additionalProperties": false,
                   "required": ["name", "type"],
                   "properties": {
                     "name": {
@@ -795,6 +834,7 @@
                 "type": "array",
                 "items": {
                   "type": "object",
+                  "additionalProperties": false,
                   "required": ["name", "type"],
                   "properties": {
                     "name": {
@@ -817,6 +857,7 @@
                 "type": "array",
                 "items": {
                   "type": "object",
+                  "additionalProperties": false,
                   "required": ["name", "type"],
                   "properties": {
                     "name": {
@@ -839,6 +880,7 @@
           },
           "egress": {
             "type": "object",
+            "additionalProperties": false,
             "properties": {
               "enabled": {
                 "type": "boolean"
@@ -847,6 +889,7 @@
                 "type": "array",
                 "items": {
                   "type": "object",
+                  "additionalProperties": false,
                   "required": ["range"],
                   "properties": {
                     "range": {
@@ -867,6 +910,7 @@
                 "type": "array",
                 "items": {
                   "type": "object",
+                  "additionalProperties": false,
                   "properties": {
                     "pattern": {
                       "type": "string"
@@ -898,6 +942,7 @@
       "type": "array",
       "items": {
         "type": "object",
+        "additionalProperties": false,
         "required": ["name", "type", "plan"],
         "allOf": [
           {
@@ -968,6 +1013,7 @@
               "properties": {
                 "memcached": {
                   "type": "object",
+                  "additionalProperties": false,
                   "properties": {
                     "enabled": {
                       "type": "boolean"
@@ -977,6 +1023,7 @@
                 },
                 "snapshot": {
                   "type": "object",
+                  "additionalProperties": false,
                   "properties": {
                     "enabled": {
                       "type": "boolean"
@@ -990,6 +1037,7 @@
                 },
                 "passwordAuth": {
                   "type": "object",
+                  "additionalProperties": false,
                   "properties": {
                     "enabled": {
                       "type": "boolean"
@@ -1029,6 +1077,7 @@
           },
           "expose": {
             "type": "object",
+            "additionalProperties": false,
             "properties": {
               "enabled": {
                 "type": "boolean"
@@ -1045,6 +1094,7 @@
           },
           "restoreFrom": {
             "type": "object",
+            "additionalProperties": false,
             "required": ["name"],
             "properties": {
               "name": {
@@ -1059,6 +1109,7 @@
       "type": "array",
       "items": {
         "type": "object",
+        "additionalProperties": false,
         "required": ["name", "type", "version", "nodes"],
         "properties": {
           "name": {
@@ -1075,6 +1126,7 @@
           },
           "expose": {
             "type": "object",
+            "additionalProperties": false,
             "required": ["enabled"],
             "properties": {
               "enabled": {
@@ -1091,10 +1143,12 @@
           },
           "nodes": {
             "type": "object",
+            "additionalProperties": false,
             "required": ["master", "data"],
             "properties": {
               "master": {
                 "type": "object",
+                "additionalProperties": false,
                 "required": ["plan", "size"],
                 "properties": {
                   "replicas": {
@@ -1113,6 +1167,7 @@
               },
               "data": {
                 "type": "object",
+                "additionalProperties": false,
                 "required": ["plan", "size"],
                 "properties": {
                   "replicas": {
@@ -1133,6 +1188,7 @@
           },
           "dashboard": {
             "type": "object",
+            "additionalProperties": false,
             "required": ["enabled", "plan"],
             "properties": {
               "enabled": {
@@ -1162,6 +1218,7 @@
       "type": "array",
       "items": {
         "type": "object",
+        "additionalProperties": false,
         "required": ["name", "size"],
         "properties": {
           "name": {
@@ -1178,6 +1235,7 @@
       "type": "array",
       "items": {
         "type": "object",
+        "additionalProperties": false,
         "required": ["name", "data"],
         "properties": {
           "name": {
@@ -1196,6 +1254,7 @@
       "type": "array",
       "items": {
         "type": "object",
+        "additionalProperties": false,
         "required": ["name", "namespace", "data"],
         "properties": {
           "name": {
@@ -1217,6 +1276,7 @@
       "type": "array",
       "items": {
         "type": "object",
+        "additionalProperties": false,
         "required": ["name", "type", "plan", "size"],
         "properties": {
           "name": {
@@ -1246,6 +1306,7 @@
           },
           "expose": {
             "type": "object",
+            "additionalProperties": false,
             "properties": {
               "enabled": {
                 "type": "boolean"
