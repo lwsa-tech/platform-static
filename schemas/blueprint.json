@@ -1002,6 +1002,58 @@
             "then": {
               "required": ["size"]
             }
+          },
+          {
+            "if": {
+              "properties": {
+                "type": { "const": "dragonfly" }
+              }
+            },
+            "then": {
+              "properties": {
+                "memcached": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "enabled": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "enabled"
+                  ]
+                },
+                "snapshot": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "enabled": {
+                      "type": "boolean"
+                    },
+                    "size": {
+                      "type": "string",
+                      "pattern": "^[0-9]+Gi$"
+                    }
+                  },
+                  "required": [
+                    "enabled",
+                    "size"
+                  ]
+                },
+                "passwordAuth": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "enabled": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "enabled"
+                  ]
+                }
+              }
+            }
           }
         ],
         "properties": {
@@ -1059,40 +1111,6 @@
                 "type": "string"
               }
             }
-          },
-          "memcached": {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-              "enabled": {
-                "type": "boolean"
-              }
-            },
-            "required": ["enabled"]
-          },
-          "snapshot": {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-              "enabled": {
-                "type": "boolean"
-              },
-              "size": {
-                "type": "string",
-                "pattern": "^[0-9]+Gi$"
-              }
-            },
-            "required": ["enabled", "size"]
-          },
-          "passwordAuth": {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-              "enabled": {
-                "type": "boolean"
-              }
-            },
-            "required": ["enabled"]
           }
         }
       }
