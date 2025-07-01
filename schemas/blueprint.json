@@ -1032,6 +1032,22 @@
                 "snapshot": false
               }
             }
+          },
+          {
+            "if": {
+              "not": {
+                "properties": {
+                  "type": {
+                    "enum": ["pxc", "psmdb", "cnpg"]
+                  }
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "pause": false
+              }
+            }
           }
         ],
         "properties": {
