@@ -1038,7 +1038,7 @@
               "not": {
                 "properties": {
                   "type": {
-                    "enum": ["pxc", "psmdb", "cnpg"]
+                    "enum": ["pxc", "psmdb", "cnpg", "ferretdb"]
                   }
                 }
               }
