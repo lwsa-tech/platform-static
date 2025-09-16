@@ -64,65 +64,75 @@
             "minimum": 1,
             "description": "Number of replicas. Default 1. Cannot be >1 if using volumes"
           },
-          "minReplicas": {
-            "type": "integer",
-            "minimum": 0,
-            "description": "Minimum number of replicas for autoscaling"
-          },
-          "maxReplicas": {
-            "type": "integer",
-            "minimum": 1,
-            "description": "Maximum number of replicas for autoscaling"
-          },
-          "scaleTriggers": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "description": "ScaleTriggers reference the scaler that will be used",
-              "additionalProperties": false,
-              "required": [
-                "type",
-                "metadata"
-              ],
-              "properties": {
-                "authenticationRef": {
+          "autoscaling": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "enabled": {
+                "type": "boolean"
+              },
+              "minReplicas": {
+                "type": "integer",
+                "minimum": 0,
+                "description": "Minimum number of replicas for autoscaling"
+              },
+              "maxReplicas": {
+                "type": "integer",
+                "minimum": 1,
+                "description": "Maximum number of replicas for autoscaling"
+              },
+              "triggers": {
+                "type": "array",
+                "items": {
                   "type": "object",
+                  "description": "Triggers reference the scaler that will be used",
                   "additionalProperties": false,
-                  "description": "AuthenticationRef points to the TriggerAuthentication or ClusterTriggerAuthentication object that is used to authenticate the scaler with the environment",
                   "required": [
-                    "name"
+                    "type",
+                    "metadata"
                   ],
                   "properties": {
-                    "kind": {
-                      "type": "string",
-                      "description": "Kind of the resource being referred to. Defaults to TriggerAuthentication."
+                    "authenticationRef": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "description": "AuthenticationRef points to the TriggerAuthentication or ClusterTriggerAuthentication object that is used to authenticate the scaler with the environment",
+                      "required": [
+                        "name"
+                      ],
+                      "properties": {
+                        "kind": {
+                          "type": "string",
+                          "description": "Kind of the resource being referred to. Defaults to TriggerAuthentication."
+                        },
+                        "name": {
+                          "type": "string"
+                        }
+                      }
                     },
                     "name": {
                       "type": "string"
+                    },
+                    "type": {
+                      "type": "string"
+                    },
+                    "metricType": {
+                      "type": "string",
+                      "description": "MetricTargetType specifies the type of metric being targeted, and should be either \"Value\", \"AverageValue\", or \"Utilization\""
+                    },
+                    "useCachedMetrics": {
+                      "type": "boolean"
+                    },
+                    "metadata": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "string"
+                      }
                     }
-                  }
-                },
-                "name": {
-                  "type": "string"
-                },
-                "type": {
-                  "type": "string"
-                },
-                "metricType": {
-                  "type": "string",
-                  "description": "MetricTargetType specifies the type of metric being targeted, and should be either \"Value\", \"AverageValue\", or \"Utilization\""
-                },
-                "useCachedMetrics": {
-                  "type": "boolean"
-                },
-                "metadata": {
-                  "type": "object",
-                  "additionalProperties": {
-                    "type": "string"
                   }
                 }
               }
-            }
+            },
+            "required": ["enabled"]
           },
           "command": {
             "type": "array",
