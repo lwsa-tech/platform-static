@@ -172,6 +172,16 @@
             },
             "required": ["enabled"]
           },
+          "autoInstrumentation": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "enabled": {
+                "type": "boolean"
+              }
+            },
+            "required": ["enabled"]
+          },
           "expose": {
             "type": "object",
             "additionalProperties": false,
