@@ -1020,7 +1020,13 @@
               }
             },
             "then": {
-              "required": ["size"]
+              "required": ["version", "size"],
+              "properties": {
+                "version": {
+                  "type": "string",
+                  "enum": ["7.0", "8.0"]
+                }
+              }
             }
           },
           {
