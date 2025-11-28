@@ -1350,7 +1350,7 @@
         }
       }
     },
-    "configMaps": {
+    "configmaps": {
       "type": "array",
       "items": {
         "type": "object",
