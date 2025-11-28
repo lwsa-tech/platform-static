@@ -220,6 +220,22 @@
               }
             }
           },
+          "mountConfigMaps": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["name", "path"],
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "path": {
+                  "type": "string"
+                }
+              }
+            }
+          },
           "envVars": {
             "type": "object",
             "additionalProperties": {
@@ -514,6 +530,22 @@
               }
             }
           },
+          "mountConfigMaps": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["name", "path"],
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "path": {
+                  "type": "string"
+                }
+              }
+            }
+          },
           "envVars": {
             "type": "object",
             "additionalProperties": {
@@ -775,6 +807,22 @@
                   "type": "string",
                   "description": "Optional ownership for the volume mount point, in user:group format (numeric or named, similar to chown)",
                   "pattern": "^(\\d+|[a-zA-Z_][a-zA-Z0-9_-]*):?(\\d+|[a-zA-Z_][a-zA-Z0-9_-]*)?$"
+                }
+              }
+            }
+          },
+          "mountConfigMaps": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["name", "path"],
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "path": {
+                  "type": "string"
                 }
               }
             }
@@ -1302,7 +1350,7 @@
         }
       }
     },
-    "configmaps": {
+    "configMaps": {
       "type": "array",
       "items": {
         "type": "object",
