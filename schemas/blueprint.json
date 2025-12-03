@@ -1122,6 +1122,22 @@
                 "pause": false
               }
             }
+          },
+          {
+            "if": {
+              "not": {
+                "properties": {
+                  "type": {
+                    "const": "cnpg"
+                  }
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "extensions": false
+              }
+            }
           }
         ],
         "properties": {
@@ -1220,6 +1236,13 @@
             "required": [
               "enabled"
             ]
+          },
+          "extensions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "List of PostgreSQL extensions to enable (cnpg only)"
           }
         }
       }
