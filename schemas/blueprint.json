@@ -1465,6 +1465,29 @@
           }
         }
       }
+    },
+    "alerting": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["enabled"],
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable alerting for this blueprint"
+        },
+        "slack": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["channel"],
+          "properties": {
+            "channel": {
+              "type": "string",
+              "description": "Slack channel for alerts (e.g., '#my-app-alerts')"
+            }
+          }
+        }
+      }
     }
   }
 }
