@@ -1135,7 +1135,8 @@
             },
             "then": {
               "properties": {
-                "extensions": false
+                "extensions": false,
+                "parameters": false
               }
             }
           }
@@ -1243,6 +1244,13 @@
               "type": "string"
             },
             "description": "List of PostgreSQL extensions to enable (cnpg only)"
+          },
+          "parameters": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "PostgreSQL configuration parameters (cnpg only)"
           }
         }
       }
