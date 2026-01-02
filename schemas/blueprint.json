@@ -1377,6 +1377,17 @@
           "size": {
             "type": "string",
             "pattern": "^[0-9]+Gi$"
+          },
+          "restoreFrom": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name"],
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Name of the volume backup to restore from"
+              }
+            }
           }
         }
       }
