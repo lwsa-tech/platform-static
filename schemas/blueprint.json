@@ -5,6 +5,7 @@
   "properties": {
     "services": {
       "type": "array",
+      "description": "Long-running workloads deployed as Kubernetes Deployments with a ClusterIP Service. Each service gets a CiliumNetworkPolicy for traffic control. Pods are spread across nodes via topology constraints.",
       "items": {
         "type": "object",
         "additionalProperties": false,
@@ -12,20 +13,20 @@
         "properties": {
           "name": {
             "type": "string",
-            "description": "Unique name for the service"
+            "description": "Unique name for the service. Used as the Deployment name, Service name, pod label (platform.lwsa.tech/service), and in network policy selectors."
           },
           "image": {
             "type": "string",
-            "description": "Docker image to use"
+            "description": "Container image reference (e.g., 'nginx:1.25' or 'registry.example.com/app:latest')."
           },
           "plan": {
             "type": "string",
             "enum": ["pico", "nano", "micro", "small", "medium", "large", "xlarge", "2xlarge", "4xlarge"],
-            "description": "Resource plan for the service"
+            "description": "Resource plan that determines CPU and memory requests/limits for the container. Plans are predefined tiers from pico (smallest) to 4xlarge (largest)."
           },
           "port": {
             "type": "integer",
-            "description": "Internal port where container listens, passed as PORT env var. Default 10000"
+            "description": "Container port the application listens on. Defaults to 10000. Also injected as the PORT environment variable."
           },
           "additionalPorts": {
             "type": "array",
@@ -36,56 +37,62 @@
               "properties": {
                 "port": {
                   "type": "integer",
-                  "description": "Additional port where container listens"
+                  "description": "Additional container port number. Each additional port can optionally be exposed via its own LoadBalancer Service."
                 },
                 "expose": {
                   "type": "object",
                   "additionalProperties": false,
+                  "description": "Exposes this additional port via a dedicated LoadBalancer Service with optional IP allowlisting.",
                   "properties": {
                     "enabled": {
-                      "type": "boolean"
+                      "type": "boolean",
+                      "description": "When true, creates a LoadBalancer Service for this additional port, making it reachable from outside the cluster."
                     },
                     "sourceRanges": {
                       "type": "array",
                       "items": {
                         "type": "string",
                         "pattern": "^([0-9]{1,3}\\.){3}[0-9]{1,3}/[0-9]{1,2}$"
-                      }
+                      },
+                      "description": "CIDR ranges allowed to reach this port through the LoadBalancer. If omitted, all source IPs are allowed."
                     }
                   },
                   "required": ["enabled"]
                 }
               }
             },
-            "description": "Additional ports where container listens"
+            "description": "Additional container ports beyond the primary port. Each gets its own CiliumNetworkPolicy ingress rule, and can optionally be exposed via LoadBalancer."
           },
           "replicas": {
             "type": "integer",
             "minimum": 1,
-            "description": "Number of replicas. Default 1. Cannot be >1 if using volumes"
+            "description": "Number of pod replicas. Defaults to 1. Cannot exceed 1 when mountVolumes is used, because volumes are ReadWriteOnce (RWO)."
           },
           "autoscaling": {
             "type": "object",
             "additionalProperties": false,
+            "description": "Configures horizontal pod autoscaling via KEDA ScaledObject. When enabled, KEDA manages replica count between minReplicas and maxReplicas based on the configured triggers.",
             "properties": {
               "enabled": {
-                "type": "boolean"
+                "type": "boolean",
+                "description": "When true, creates a KEDA ScaledObject that automatically scales the service based on the configured triggers."
               },
               "minReplicas": {
                 "type": "integer",
                 "minimum": 0,
-                "description": "Minimum number of replicas for autoscaling"
+                "description": "Minimum number of replicas KEDA will scale down to. Set to 0 to allow scale-to-zero. Defaults to 1."
               },
               "maxReplicas": {
                 "type": "integer",
                 "minimum": 1,
-                "description": "Maximum number of replicas for autoscaling"
+                "description": "Maximum number of replicas KEDA will scale up to. Defaults to 10."
               },
               "triggers": {
                 "type": "array",
+                "description": "KEDA trigger specifications that determine when and how to scale. If omitted, defaults to a CPU trigger at 200% average utilization.",
                 "items": {
                   "type": "object",
-                  "description": "Triggers reference the scaler that will be used",
+                  "description": "A KEDA trigger definition. Supports any KEDA-compatible scaler type (cpu, memory, prometheus, rabbitmq, etc.).",
                   "additionalProperties": false,
                   "required": [
                     "type",
@@ -95,38 +102,43 @@
                     "authenticationRef": {
                       "type": "object",
                       "additionalProperties": false,
-                      "description": "AuthenticationRef points to the TriggerAuthentication or ClusterTriggerAuthentication object that is used to authenticate the scaler with the environment",
+                      "description": "Reference to a TriggerAuthentication or ClusterTriggerAuthentication resource that provides credentials for the scaler.",
                       "required": [
                         "name"
                       ],
                       "properties": {
                         "kind": {
                           "type": "string",
-                          "description": "Kind of the resource being referred to. Defaults to TriggerAuthentication."
+                          "description": "Kind of the authentication resource. Defaults to TriggerAuthentication if omitted."
                         },
                         "name": {
-                          "type": "string"
+                          "type": "string",
+                          "description": "Name of the TriggerAuthentication or ClusterTriggerAuthentication resource."
                         }
                       }
                     },
                     "name": {
-                      "type": "string"
+                      "type": "string",
+                      "description": "Optional name for this trigger, used to identify it in metrics and logs."
                     },
                     "type": {
-                      "type": "string"
+                      "type": "string",
+                      "description": "KEDA scaler type (e.g., 'cpu', 'memory', 'prometheus', 'rabbitmq', 'cron')."
                     },
                     "metricType": {
                       "type": "string",
-                      "description": "MetricTargetType specifies the type of metric being targeted, and should be either \"Value\", \"AverageValue\", or \"Utilization\""
+                      "description": "How the metric target is interpreted: 'Value' (absolute), 'AverageValue' (per-pod average), or 'Utilization' (percentage of resource request)."
                     },
                     "useCachedMetrics": {
-                      "type": "boolean"
+                      "type": "boolean",
+                      "description": "When true, KEDA caches the metric value between polling intervals instead of querying on every evaluation."
                     },
                     "metadata": {
                       "type": "object",
                       "additionalProperties": {
                         "type": "string"
-                      }
+                      },
+                      "description": "Scaler-specific configuration parameters. Contents depend on the trigger type (e.g., for cpu: {type: 'Utilization', value: '200'})."
                     }
                   }
                 }
@@ -139,35 +151,38 @@
             "items": {
               "type": "string"
             },
-            "description": "Command to run in the container"
+            "description": "Overrides the container entrypoint (ENTRYPOINT). Each element is a separate argument in the exec form."
           },
           "args": {
             "type": "array",
             "items": {
               "type": "string"
             },
-            "description": "Arguments to the command in the container"
+            "description": "Arguments passed to the container entrypoint (CMD). Used alongside or instead of command."
           },
           "ingress": {
             "type": "object",
             "additionalProperties": false,
+            "description": "Creates a Kubernetes Ingress resource to expose the service via HTTPS through the ingress-nginx controller. Automatically provisions TLS certificates for configured hosts.",
             "properties": {
               "enabled": {
-                "type": "boolean"
+                "type": "boolean",
+                "description": "When true, creates an Ingress resource that routes external HTTPS traffic to this service's primary port."
               },
               "hosts": {
                 "type": "array",
                 "items": {
                   "type": "string"
                 },
-                "description": "List of hostnames for automatic certificate management"
+                "description": "Custom hostnames (e.g., 'app.example.com') for TLS certificate provisioning. The cluster's auto-generated domain is always included in addition to these."
               },
               "sourceRanges": {
                 "type": "array",
                 "items": {
                   "type": "string",
                   "pattern": "^([0-9]{1,3}\\.){3}[0-9]{1,3}/[0-9]{1,2}$"
-                }
+                },
+                "description": "CIDR ranges allowed to access the Ingress. If omitted, all source IPs are allowed."
               }
             },
             "required": ["enabled"]
@@ -175,9 +190,11 @@
           "autoInstrumentation": {
             "type": "object",
             "additionalProperties": false,
+            "description": "Enables OpenTelemetry auto-instrumentation by adding OTel annotations to the pod spec, allowing the OTel operator to inject tracing/metrics sidecars.",
             "properties": {
               "enabled": {
-                "type": "boolean"
+                "type": "boolean",
+                "description": "When true, adds OpenTelemetry annotations to the pod, enabling automatic trace and metrics collection."
               }
             },
             "required": ["enabled"]
@@ -185,36 +202,42 @@
           "expose": {
             "type": "object",
             "additionalProperties": false,
+            "description": "Exposes the service's primary port via a LoadBalancer Service, making it reachable from outside the cluster on a cloud-assigned IP.",
             "properties": {
               "enabled": {
-                "type": "boolean"
+                "type": "boolean",
+                "description": "When true, creates a LoadBalancer Service for the primary container port and adds corresponding CiliumNetworkPolicy ingress rules."
               },
               "sourceRanges": {
                 "type": "array",
                 "items": {
                   "type": "string",
                   "pattern": "^([0-9]{1,3}\\.){3}[0-9]{1,3}/[0-9]{1,2}$"
-                }
+                },
+                "description": "CIDR ranges allowed to reach the LoadBalancer. If omitted, all source IPs are allowed."
               }
             },
             "required": ["enabled"]
           },
           "mountVolumes": {
             "type": "array",
+            "description": "Mounts persistent volumes (defined in the top-level 'volumes' array) into the container. Switching the Deployment strategy to Recreate (required for RWO volumes). An init container is created when ownership is specified.",
             "items": {
               "type": "object",
               "additionalProperties": false,
               "required": ["name", "path"],
               "properties": {
                 "name": {
-                  "type": "string"
+                  "type": "string",
+                  "description": "Name of the volume to mount. Must match a volume defined in the top-level 'volumes' array."
                 },
                 "path": {
-                  "type": "string"
+                  "type": "string",
+                  "description": "Absolute path inside the container where the volume will be mounted (e.g., '/data')."
                 },
                 "ownership": {
                   "type": "string",
-                  "description": "Optional ownership for the volume mount point, in user:group format (numeric or named, similar to chown)",
+                  "description": "Sets ownership of the mount point via an init container that runs chown before the main container starts. Format: 'user:group' (numeric or named, e.g., '1000:1000' or 'www-data:www-data').",
                   "pattern": "^(\\d+|[a-zA-Z_][a-zA-Z0-9_-]*):?(\\d+|[a-zA-Z_][a-zA-Z0-9_-]*)?$"
                 }
               }
@@ -222,16 +245,19 @@
           },
           "mountConfigMaps": {
             "type": "array",
+            "description": "Mounts ConfigMaps (defined in the top-level 'configmaps' array) as files inside the container.",
             "items": {
               "type": "object",
               "additionalProperties": false,
               "required": ["name", "path"],
               "properties": {
                 "name": {
-                  "type": "string"
+                  "type": "string",
+                  "description": "Name of the ConfigMap to mount. Must match a ConfigMap defined in the top-level 'configmaps' array."
                 },
                 "path": {
-                  "type": "string"
+                  "type": "string",
+                  "description": "Absolute path inside the container where the ConfigMap will be mounted as a directory of files."
                 }
               }
             }
@@ -240,115 +266,135 @@
             "type": "object",
             "additionalProperties": {
               "type": "string"
-            }
+            },
+            "description": "Static environment variables injected into the container. Each key becomes an env var name, each value becomes the env var value."
           },
           "envVarsFrom": {
             "type": "object",
             "additionalProperties": false,
+            "description": "Injects environment variables from external sources: Kubernetes Secrets, ConfigMaps, database servers, search engines, or message brokers. Each source type auto-generates connection-related env vars.",
             "properties": {
               "secrets": {
                 "type": "array",
+                "description": "Injects env vars from Kubernetes Secrets. By default all keys from the Secret are injected; use mappings to select specific keys or rename them.",
                 "items": {
                   "type": "object",
                   "additionalProperties": false,
                   "required": ["name"],
                   "properties": {
                     "name": {
-                      "type": "string"
+                      "type": "string",
+                      "description": "Name of the Kubernetes Secret to source env vars from."
                     },
                     "mappings": {
                       "type": "object",
                       "additionalProperties": {
                         "type": "string"
-                      }
+                      },
+                      "description": "Selective key injection. Keys are the env var names to set, values are the Secret keys to read from. If omitted, all Secret keys are injected as env vars."
                     }
                   }
                 }
               },
               "configMaps": {
                 "type": "array",
+                "description": "Injects env vars from Kubernetes ConfigMaps. By default all keys are injected; use mappings to select specific keys or rename them.",
                 "items": {
                   "type": "object",
                   "additionalProperties": false,
                   "required": ["name"],
                   "properties": {
                     "name": {
-                      "type": "string"
+                      "type": "string",
+                      "description": "Name of the Kubernetes ConfigMap to source env vars from."
                     },
                     "mappings": {
                       "type": "object",
                       "additionalProperties": {
                         "type": "string"
-                      }
+                      },
+                      "description": "Selective key injection. Keys are the env var names to set, values are the ConfigMap keys to read from. If omitted, all ConfigMap keys are injected as env vars."
                     }
                   }
                 }
               },
               "dbServers": {
                 "type": "array",
+                "description": "Auto-injects database connection env vars from a database server defined in the top-level 'dbServers' array. The injected vars depend on the database type: pxc/cnpg inject DB_HOST, DB_HOST_READ, DB_USER, DB_PASSWORD, DB_NAME, DATABASE_URL; dragonfly injects REDIS_HOST, REDIS_PASSWORD, REDIS_URL, MEMCACHED_HOST; psmdb/ferretdb inject MONGODB_HOST, MONGODB_USERNAME, MONGODB_PASSWORD, MONGODB_DATABASE, MONGODB_URI.",
                 "items": {
                   "type": "object",
                   "additionalProperties": false,
                   "required": ["name", "type"],
                   "properties": {
                     "name": {
-                      "type": "string"
+                      "type": "string",
+                      "description": "Name of the database server (must match a dbServers[].name entry)."
                     },
                     "type": {
                       "type": "string",
-                      "enum": ["pxc", "cnpg", "dragonfly", "psmdb", "ferretdb"]
+                      "enum": ["pxc", "cnpg", "dragonfly", "psmdb", "ferretdb"],
+                      "description": "Database type. Must match the type of the referenced dbServer. Determines which connection env vars are injected."
                     },
                     "mappings": {
                       "type": "object",
                       "additionalProperties": {
                         "type": "string"
-                      }
+                      },
+                      "description": "Override auto-generated env var names. Keys are the custom env var names to set, values are the default env var names to map from (e.g., {'MY_DB_HOST': 'DB_HOST'})."
                     }
                   }
                 }
               },
               "searches": {
                 "type": "array",
+                "description": "Auto-injects Elasticsearch connection env vars: ELASTICSEARCH_HOST, ELASTICSEARCH_PORT, ELASTICSEARCH_USER, ELASTICSEARCH_PASSWORD, ELASTICSEARCH_URL (https scheme).",
                 "items": {
                   "type": "object",
                   "additionalProperties": false,
                   "required": ["name", "type"],
                   "properties": {
                     "name": {
-                      "type": "string"
+                      "type": "string",
+                      "description": "Name of the search engine (must match a searches[].name entry)."
                     },
                     "type": {
                       "type": "string",
-                      "enum": ["elasticsearch"]
+                      "enum": ["elasticsearch"],
+                      "description": "Search engine type. Currently only 'elasticsearch' is supported."
                     },
                     "mappings": {
                       "type": "object",
                       "additionalProperties": {
                         "type": "string"
-                      }
+                      },
+                      "description": "Override auto-generated env var names. Keys are the custom env var names, values are the default env var names to map from."
                     }
                   }
                 }
               },
               "messageBrokers": {
                 "type": "array",
+                "description": "Auto-injects message broker connection env vars. For RabbitMQ: RABBITMQ_HOST, RABBITMQ_PORT, RABBITMQ_USER, RABBITMQ_PASSWORD, RABBITMQ_URL.",
                 "items": {
                   "type": "object",
                   "additionalProperties": false,
                   "required": ["name", "type"],
                   "properties": {
                     "name": {
-                      "type": "string"
+                      "type": "string",
+                      "description": "Name of the message broker (must match a messageBrokers[].name entry)."
                     },
                     "type": {
                       "type": "string",
-                      "enum": ["rabbitmq"]
+                      "enum": ["rabbitmq"],
+                      "description": "Broker type. Currently only 'rabbitmq' is supported."
                     },
                     "mappings": {
                       "type": "object",
                       "additionalProperties": {
                         "type": "string"
-                      }
+                      },
+                      "description": "Override auto-generated env var names. Keys are the custom env var names, values are the default env var names to map from."
                     }
                   }
                 }
@@ -358,35 +404,42 @@
           "allowFrom": {
             "type": "object",
             "additionalProperties": false,
+            "description": "Defines CiliumNetworkPolicy ingress rules allowing traffic from specific services or cronjobs in other namespaces to reach this service.",
             "properties": {
               "services": {
                 "type": "array",
+                "description": "Services from other namespaces allowed to send traffic to this service. Creates CiliumNetworkPolicy ingress rules matching on the source pod's platform.lwsa.tech/service label.",
                 "items": {
                   "type": "object",
                   "additionalProperties": false,
                   "required": ["namespace", "name"],
                   "properties": {
                     "namespace": {
-                      "type": "string"
+                      "type": "string",
+                      "description": "Namespace of the source service."
                     },
                     "name": {
-                      "type": "string"
+                      "type": "string",
+                      "description": "Name of the source service (matches platform.lwsa.tech/service label)."
                     }
                   }
                 }
               },
               "cronjobs": {
                 "type": "array",
+                "description": "CronJobs from other namespaces allowed to send traffic to this service. Creates CiliumNetworkPolicy ingress rules matching on the source pod's platform.lwsa.tech/cronjob label.",
                 "items": {
                   "type": "object",
                   "additionalProperties": false,
                   "required": ["namespace", "name"],
                   "properties": {
                     "namespace": {
-                      "type": "string"
+                      "type": "string",
+                      "description": "Namespace of the source cronjob."
                     },
                     "name": {
-                      "type": "string"
+                      "type": "string",
+                      "description": "Name of the source cronjob (matches platform.lwsa.tech/cronjob label)."
                     }
                   }
                 }
@@ -396,19 +449,23 @@
           "allowTo": {
             "type": "object",
             "additionalProperties": false,
+            "description": "Defines CiliumNetworkPolicy egress rules allowing this service to send traffic to specific services in other namespaces.",
             "properties": {
               "services": {
                 "type": "array",
+                "description": "Services in other namespaces this service is allowed to send traffic to. Creates CiliumNetworkPolicy egress rules matching on the destination pod's platform.lwsa.tech/service label.",
                 "items": {
                   "type": "object",
                   "additionalProperties": false,
                   "required": ["namespace", "name"],
                   "properties": {
                     "namespace": {
-                      "type": "string"
+                      "type": "string",
+                      "description": "Namespace of the destination service."
                     },
                     "name": {
-                      "type": "string"
+                      "type": "string",
+                      "description": "Name of the destination service (matches platform.lwsa.tech/service label)."
                     }
                   }
                 }
@@ -418,12 +475,15 @@
           "egress": {
             "type": "object",
             "additionalProperties": false,
+            "description": "Controls outbound traffic via CiliumNetworkPolicy egress rules. DNS, S3, MinIO, and intra-namespace traffic are always allowed regardless of these settings.",
             "properties": {
               "enabled": {
-                "type": "boolean"
+                "type": "boolean",
+                "description": "When false, blocks all egress traffic except DNS, S3, MinIO, and intra-namespace. Defaults to true (all egress allowed)."
               },
               "toCIDRs": {
                 "type": "array",
+                "description": "IP ranges this service is allowed to reach. Added as CiliumNetworkPolicy egress CIDR rules. Only effective when egress.enabled is true.",
                 "items": {
                   "type": "object",
                   "additionalProperties": false,
@@ -431,36 +491,44 @@
                   "properties": {
                     "range": {
                       "type": "string",
-                      "pattern": "^([0-9]{1,3}\\.){3}[0-9]{1,3}/[0-9]{1,2}$"
+                      "pattern": "^([0-9]{1,3}\\.){3}[0-9]{1,3}/[0-9]{1,2}$",
+                      "description": "CIDR range to allow (e.g., '10.0.0.0/8')."
                     },
                     "port": {
-                      "type": "integer"
+                      "type": "integer",
+                      "description": "Optional port restriction. If omitted, all ports to this CIDR are allowed."
                     },
                     "protocol": {
                       "type": "string",
-                      "enum": ["TCP", "UDP"]
+                      "enum": ["TCP", "UDP"],
+                      "description": "Protocol for the port restriction. Defaults to TCP if port is specified."
                     }
                   }
                 }
               },
               "toFQDNs": {
                 "type": "array",
+                "description": "Domain names this service is allowed to reach. Added as CiliumNetworkPolicy FQDN-based egress rules. Only effective when egress.enabled is true.",
                 "items": {
                   "type": "object",
                   "additionalProperties": false,
                   "properties": {
                     "pattern": {
-                      "type": "string"
+                      "type": "string",
+                      "description": "Wildcard domain pattern to allow (e.g., '*.example.com'). Mutually exclusive with 'host'."
                     },
                     "host": {
-                      "type": "string"
+                      "type": "string",
+                      "description": "Exact domain name to allow (e.g., 'api.example.com'). Mutually exclusive with 'pattern'."
                     },
                     "port": {
-                      "type": "integer"
+                      "type": "integer",
+                      "description": "Optional port restriction. If omitted, all ports to this FQDN are allowed."
                     },
                     "protocol": {
                       "type": "string",
-                      "enum": ["TCP", "UDP"]
+                      "enum": ["TCP", "UDP"],
+                      "description": "Protocol for the port restriction. Defaults to TCP if port is specified."
                     }
                   },
                   "oneOf": [
@@ -477,6 +545,7 @@
     },
     "cronjobs": {
       "type": "array",
+      "description": "Scheduled workloads deployed as Kubernetes CronJobs. Each cronjob gets a CiliumNetworkPolicy for traffic control. Pods use restartPolicy: OnFailure with a 3-day active deadline.",
       "items": {
         "type": "object",
         "additionalProperties": false,
@@ -484,47 +553,50 @@
         "properties": {
           "name": {
             "type": "string",
-            "description": "Unique name for the cron job"
+            "description": "Unique name for the cronjob. Used as the CronJob name, pod label (platform.lwsa.tech/cronjob), and in network policy selectors."
           },
           "image": {
             "type": "string",
-            "description": "Docker image to use"
+            "description": "Container image reference (e.g., 'busybox:1.36' or 'registry.example.com/worker:latest')."
           },
           "plan": {
             "type": "string",
             "enum": ["pico", "nano", "micro", "small", "medium", "large", "xlarge", "2xlarge", "4xlarge"],
-            "description": "Resource plan for the cron job"
+            "description": "Resource plan that determines CPU and memory requests/limits for the container."
           },
           "command": {
             "type": "array",
             "items": {
               "type": "string"
             },
-            "description": "Command to run in the container"
+            "description": "Overrides the container entrypoint (ENTRYPOINT). Each element is a separate argument in the exec form."
           },
           "args": {
             "type": "array",
             "items": {
               "type": "string"
             },
-            "description": "Arguments to the command in the container"
+            "description": "Arguments passed to the container entrypoint (CMD). Used alongside or instead of command."
           },
           "mountVolumes": {
             "type": "array",
+            "description": "Mounts persistent volumes (defined in the top-level 'volumes' array) into the container.",
             "items": {
               "type": "object",
               "additionalProperties": false,
               "required": ["name", "path"],
               "properties": {
                 "name": {
-                  "type": "string"
+                  "type": "string",
+                  "description": "Name of the volume to mount. Must match a volume defined in the top-level 'volumes' array."
                 },
                 "path": {
-                  "type": "string"
+                  "type": "string",
+                  "description": "Absolute path inside the container where the volume will be mounted."
                 },
                 "ownership": {
                   "type": "string",
-                  "description": "Optional ownership for the volume mount point, in user:group format (numeric or named, similar to chown)",
+                  "description": "Sets ownership of the mount point via an init container that runs chown before the main container starts. Format: 'user:group' (numeric or named, e.g., '1000:1000').",
                   "pattern": "^(\\d+|[a-zA-Z_][a-zA-Z0-9_-]*):?(\\d+|[a-zA-Z_][a-zA-Z0-9_-]*)?$"
                 }
               }
@@ -532,16 +604,19 @@
           },
           "mountConfigMaps": {
             "type": "array",
+            "description": "Mounts ConfigMaps (defined in the top-level 'configmaps' array) as files inside the container.",
             "items": {
               "type": "object",
               "additionalProperties": false,
               "required": ["name", "path"],
               "properties": {
                 "name": {
-                  "type": "string"
+                  "type": "string",
+                  "description": "Name of the ConfigMap to mount. Must match a ConfigMap defined in the top-level 'configmaps' array."
                 },
                 "path": {
-                  "type": "string"
+                  "type": "string",
+                  "description": "Absolute path inside the container where the ConfigMap will be mounted as a directory of files."
                 }
               }
             }
@@ -550,115 +625,135 @@
             "type": "object",
             "additionalProperties": {
               "type": "string"
-            }
+            },
+            "description": "Static environment variables injected into the container. Each key becomes an env var name, each value becomes the env var value."
           },
           "envVarsFrom": {
             "type": "object",
             "additionalProperties": false,
+            "description": "Injects environment variables from external sources: Kubernetes Secrets, ConfigMaps, database servers, search engines, or message brokers.",
             "properties": {
               "secrets": {
                 "type": "array",
+                "description": "Injects env vars from Kubernetes Secrets. By default all keys from the Secret are injected; use mappings to select specific keys or rename them.",
                 "items": {
                   "type": "object",
                   "additionalProperties": false,
                   "required": ["name"],
                   "properties": {
                     "name": {
-                      "type": "string"
+                      "type": "string",
+                      "description": "Name of the Kubernetes Secret to source env vars from."
                     },
                     "mappings": {
                       "type": "object",
                       "additionalProperties": {
                         "type": "string"
-                      }
+                      },
+                      "description": "Selective key injection. Keys are the env var names to set, values are the Secret keys to read from. If omitted, all Secret keys are injected as env vars."
                     }
                   }
                 }
               },
               "configMaps": {
                 "type": "array",
+                "description": "Injects env vars from Kubernetes ConfigMaps. By default all keys are injected; use mappings to select specific keys or rename them.",
                 "items": {
                   "type": "object",
                   "additionalProperties": false,
                   "required": ["name"],
                   "properties": {
                     "name": {
-                      "type": "string"
+                      "type": "string",
+                      "description": "Name of the Kubernetes ConfigMap to source env vars from."
                     },
                     "mappings": {
                       "type": "object",
                       "additionalProperties": {
                         "type": "string"
-                      }
+                      },
+                      "description": "Selective key injection. Keys are the env var names to set, values are the ConfigMap keys to read from. If omitted, all ConfigMap keys are injected as env vars."
                     }
                   }
                 }
               },
               "dbServers": {
                 "type": "array",
+                "description": "Auto-injects database connection env vars from a database server defined in the top-level 'dbServers' array. The injected vars depend on the database type: pxc/cnpg inject DB_HOST, DB_HOST_READ, DB_USER, DB_PASSWORD, DB_NAME, DATABASE_URL; dragonfly injects REDIS_HOST, REDIS_PASSWORD, REDIS_URL, MEMCACHED_HOST; psmdb/ferretdb inject MONGODB_HOST, MONGODB_USERNAME, MONGODB_PASSWORD, MONGODB_DATABASE, MONGODB_URI.",
                 "items": {
                   "type": "object",
                   "additionalProperties": false,
                   "required": ["name", "type"],
                   "properties": {
                     "name": {
-                      "type": "string"
+                      "type": "string",
+                      "description": "Name of the database server (must match a dbServers[].name entry)."
                     },
                     "type": {
                       "type": "string",
-                      "enum": ["pxc", "cnpg", "dragonfly", "psmdb", "ferretdb"]
+                      "enum": ["pxc", "cnpg", "dragonfly", "psmdb", "ferretdb"],
+                      "description": "Database type. Must match the type of the referenced dbServer. Determines which connection env vars are injected."
                     },
                     "mappings": {
                       "type": "object",
                       "additionalProperties": {
                         "type": "string"
-                      }
+                      },
+                      "description": "Override auto-generated env var names. Keys are the custom env var names to set, values are the default env var names to map from."
                     }
                   }
                 }
               },
               "searches": {
                 "type": "array",
+                "description": "Auto-injects Elasticsearch connection env vars: ELASTICSEARCH_HOST, ELASTICSEARCH_PORT, ELASTICSEARCH_USER, ELASTICSEARCH_PASSWORD, ELASTICSEARCH_URL.",
                 "items": {
                   "type": "object",
                   "additionalProperties": false,
                   "required": ["name", "type"],
                   "properties": {
                     "name": {
-                      "type": "string"
+                      "type": "string",
+                      "description": "Name of the search engine (must match a searches[].name entry)."
                     },
                     "type": {
                       "type": "string",
-                      "enum": ["elasticsearch"]
+                      "enum": ["elasticsearch"],
+                      "description": "Search engine type. Currently only 'elasticsearch' is supported."
                     },
                     "mappings": {
                       "type": "object",
                       "additionalProperties": {
                         "type": "string"
-                      }
+                      },
+                      "description": "Override auto-generated env var names. Keys are the custom env var names, values are the default env var names to map from."
                     }
                   }
                 }
               },
               "messageBrokers": {
                 "type": "array",
+                "description": "Auto-injects message broker connection env vars. For RabbitMQ: RABBITMQ_HOST, RABBITMQ_PORT, RABBITMQ_USER, RABBITMQ_PASSWORD, RABBITMQ_URL.",
                 "items": {
                   "type": "object",
                   "additionalProperties": false,
                   "required": ["name", "type"],
                   "properties": {
                     "name": {
-                      "type": "string"
+                      "type": "string",
+                      "description": "Name of the message broker (must match a messageBrokers[].name entry)."
                     },
                     "type": {
                       "type": "string",
-                      "enum": ["rabbitmq"]
+                      "enum": ["rabbitmq"],
+                      "description": "Broker type. Currently only 'rabbitmq' is supported."
                     },
                     "mappings": {
                       "type": "object",
                       "additionalProperties": {
                         "type": "string"
-                      }
+                      },
+                      "description": "Override auto-generated env var names. Keys are the custom env var names, values are the default env var names to map from."
                     }
                   }
                 }
@@ -668,19 +763,23 @@
           "allowTo": {
             "type": "object",
             "additionalProperties": false,
+            "description": "Defines CiliumNetworkPolicy egress rules allowing this cronjob to send traffic to specific services in other namespaces.",
             "properties": {
               "services": {
                 "type": "array",
+                "description": "Services in other namespaces this cronjob is allowed to send traffic to.",
                 "items": {
                   "type": "object",
                   "additionalProperties": false,
                   "required": ["namespace", "name"],
                   "properties": {
                     "namespace": {
-                      "type": "string"
+                      "type": "string",
+                      "description": "Namespace of the destination service."
                     },
                     "name": {
-                      "type": "string"
+                      "type": "string",
+                      "description": "Name of the destination service (matches platform.lwsa.tech/service label)."
                     }
                   }
                 }
@@ -690,12 +789,15 @@
           "egress": {
             "type": "object",
             "additionalProperties": false,
+            "description": "Controls outbound traffic via CiliumNetworkPolicy egress rules. DNS, S3, MinIO, and intra-namespace traffic are always allowed regardless of these settings.",
             "properties": {
               "enabled": {
-                "type": "boolean"
+                "type": "boolean",
+                "description": "When false, blocks all egress traffic except DNS, S3, MinIO, and intra-namespace. Defaults to true (all egress allowed)."
               },
               "toCIDRs": {
                 "type": "array",
+                "description": "IP ranges this cronjob is allowed to reach.",
                 "items": {
                   "type": "object",
                   "additionalProperties": false,
@@ -703,36 +805,44 @@
                   "properties": {
                     "range": {
                       "type": "string",
-                      "pattern": "^([0-9]{1,3}\\.){3}[0-9]{1,3}/[0-9]{1,2}$"
+                      "pattern": "^([0-9]{1,3}\\.){3}[0-9]{1,3}/[0-9]{1,2}$",
+                      "description": "CIDR range to allow (e.g., '10.0.0.0/8')."
                     },
                     "port": {
-                      "type": "integer"
+                      "type": "integer",
+                      "description": "Optional port restriction. If omitted, all ports to this CIDR are allowed."
                     },
                     "protocol": {
                       "type": "string",
-                      "enum": ["TCP", "UDP"]
+                      "enum": ["TCP", "UDP"],
+                      "description": "Protocol for the port restriction. Defaults to TCP if port is specified."
                     }
                   }
                 }
               },
               "toFQDNs": {
                 "type": "array",
+                "description": "Domain names this cronjob is allowed to reach.",
                 "items": {
                   "type": "object",
                   "additionalProperties": false,
                   "properties": {
                     "pattern": {
-                      "type": "string"
+                      "type": "string",
+                      "description": "Wildcard domain pattern to allow (e.g., '*.example.com'). Mutually exclusive with 'host'."
                     },
                     "host": {
-                      "type": "string"
+                      "type": "string",
+                      "description": "Exact domain name to allow (e.g., 'api.example.com'). Mutually exclusive with 'pattern'."
                     },
                     "port": {
-                      "type": "integer"
+                      "type": "integer",
+                      "description": "Optional port restriction. If omitted, all ports to this FQDN are allowed."
                     },
                     "protocol": {
                       "type": "string",
-                      "enum": ["TCP", "UDP"]
+                      "enum": ["TCP", "UDP"],
+                      "description": "Protocol for the port restriction. Defaults to TCP if port is specified."
                     }
                   },
                   "oneOf": [
@@ -746,13 +856,14 @@
           },
           "schedule": {
             "type": "string",
-            "description": "Cron schedule string (e.g., '*/5 * * * *')"
+            "description": "Cron schedule expression (e.g., '*/5 * * * *' for every 5 minutes, '0 2 * * *' for daily at 2 AM). Uses standard 5-field cron syntax."
           }
         }
       }
     },
     "jobs": {
       "type": "array",
+      "description": "One-shot workloads deployed as Kubernetes Jobs. Each job gets a CiliumNetworkPolicy. Jobs run with restartPolicy: OnFailure and a 3-day active deadline. Can be used as ArgoCD resource hooks for lifecycle automation.",
       "items": {
         "type": "object",
         "additionalProperties": false,
@@ -760,52 +871,55 @@
         "properties": {
           "name": {
             "type": "string",
-            "description": "Unique name for the job"
+            "description": "Unique name for the job. Used as the Job name, pod label (platform.lwsa.tech/job), and in network policy selectors."
           },
           "image": {
             "type": "string",
-            "description": "Docker image to use"
+            "description": "Container image reference (e.g., 'busybox:1.36' or 'registry.example.com/migrator:latest')."
           },
           "plan": {
             "type": "string",
             "enum": ["pico", "nano", "micro", "small", "medium", "large", "xlarge", "2xlarge", "4xlarge"],
-            "description": "Resource plan for the job"
+            "description": "Resource plan that determines CPU and memory requests/limits for the container."
           },
           "hook": {
             "type": "string",
             "enum": ["PreSync", "Sync", "Skip", "PostSync", "SyncFail", "PostDelete"],
-            "description": "Optional Argo CD hook type. See https://argo-cd.readthedocs.io/en/stable/user-guide/resource_hooks/#overview"
+            "description": "ArgoCD resource hook type. Controls when the job runs relative to the sync lifecycle: PreSync (before sync), Sync (during), PostSync (after), SyncFail (on failure), PostDelete (on app deletion), Skip (never run by ArgoCD). When set, the job auto-deletes after 3 days. When omitted, the job persists indefinitely to avoid OutOfSync detection."
           },
           "command": {
             "type": "array",
             "items": {
               "type": "string"
             },
-            "description": "Command to run in the container"
+            "description": "Overrides the container entrypoint (ENTRYPOINT). Each element is a separate argument in the exec form."
           },
           "args": {
             "type": "array",
             "items": {
               "type": "string"
             },
-            "description": "Arguments to the command in the container"
+            "description": "Arguments passed to the container entrypoint (CMD). Used alongside or instead of command."
           },
           "mountVolumes": {
             "type": "array",
+            "description": "Mounts persistent volumes (defined in the top-level 'volumes' array) into the container.",
             "items": {
               "type": "object",
               "additionalProperties": false,
               "required": ["name", "path"],
               "properties": {
                 "name": {
-                  "type": "string"
+                  "type": "string",
+                  "description": "Name of the volume to mount. Must match a volume defined in the top-level 'volumes' array."
                 },
                 "path": {
-                  "type": "string"
+                  "type": "string",
+                  "description": "Absolute path inside the container where the volume will be mounted."
                 },
                 "ownership": {
                   "type": "string",
-                  "description": "Optional ownership for the volume mount point, in user:group format (numeric or named, similar to chown)",
+                  "description": "Sets ownership of the mount point via an init container that runs chown before the main container starts. Format: 'user:group' (numeric or named, e.g., '1000:1000').",
                   "pattern": "^(\\d+|[a-zA-Z_][a-zA-Z0-9_-]*):?(\\d+|[a-zA-Z_][a-zA-Z0-9_-]*)?$"
                 }
               }
@@ -813,16 +927,19 @@
           },
           "mountConfigMaps": {
             "type": "array",
+            "description": "Mounts ConfigMaps (defined in the top-level 'configmaps' array) as files inside the container.",
             "items": {
               "type": "object",
               "additionalProperties": false,
               "required": ["name", "path"],
               "properties": {
                 "name": {
-                  "type": "string"
+                  "type": "string",
+                  "description": "Name of the ConfigMap to mount. Must match a ConfigMap defined in the top-level 'configmaps' array."
                 },
                 "path": {
-                  "type": "string"
+                  "type": "string",
+                  "description": "Absolute path inside the container where the ConfigMap will be mounted as a directory of files."
                 }
               }
             }
@@ -831,115 +948,135 @@
             "type": "object",
             "additionalProperties": {
               "type": "string"
-            }
+            },
+            "description": "Static environment variables injected into the container. Each key becomes an env var name, each value becomes the env var value."
           },
           "envVarsFrom": {
             "type": "object",
             "additionalProperties": false,
+            "description": "Injects environment variables from external sources: Kubernetes Secrets, ConfigMaps, database servers, search engines, or message brokers.",
             "properties": {
               "secrets": {
                 "type": "array",
+                "description": "Injects env vars from Kubernetes Secrets. By default all keys from the Secret are injected; use mappings to select specific keys or rename them.",
                 "items": {
                   "type": "object",
                   "additionalProperties": false,
                   "required": ["name"],
                   "properties": {
                     "name": {
-                      "type": "string"
+                      "type": "string",
+                      "description": "Name of the Kubernetes Secret to source env vars from."
                     },
                     "mappings": {
                       "type": "object",
                       "additionalProperties": {
                         "type": "string"
-                      }
+                      },
+                      "description": "Selective key injection. Keys are the env var names to set, values are the Secret keys to read from. If omitted, all Secret keys are injected as env vars."
                     }
                   }
                 }
               },
               "configMaps": {
                 "type": "array",
+                "description": "Injects env vars from Kubernetes ConfigMaps. By default all keys are injected; use mappings to select specific keys or rename them.",
                 "items": {
                   "type": "object",
                   "additionalProperties": false,
                   "required": ["name"],
                   "properties": {
                     "name": {
-                      "type": "string"
+                      "type": "string",
+                      "description": "Name of the Kubernetes ConfigMap to source env vars from."
                     },
                     "mappings": {
                       "type": "object",
                       "additionalProperties": {
                         "type": "string"
-                      }
+                      },
+                      "description": "Selective key injection. Keys are the env var names to set, values are the ConfigMap keys to read from. If omitted, all ConfigMap keys are injected as env vars."
                     }
                   }
                 }
               },
               "dbServers": {
                 "type": "array",
+                "description": "Auto-injects database connection env vars from a database server defined in the top-level 'dbServers' array. The injected vars depend on the database type.",
                 "items": {
                   "type": "object",
                   "additionalProperties": false,
                   "required": ["name", "type"],
                   "properties": {
                     "name": {
-                      "type": "string"
+                      "type": "string",
+                      "description": "Name of the database server (must match a dbServers[].name entry)."
                     },
                     "type": {
                       "type": "string",
-                      "enum": ["pxc", "cnpg", "dragonfly", "psmdb", "ferretdb"]
+                      "enum": ["pxc", "cnpg", "dragonfly", "psmdb", "ferretdb"],
+                      "description": "Database type. Must match the type of the referenced dbServer."
                     },
                     "mappings": {
                       "type": "object",
                       "additionalProperties": {
                         "type": "string"
-                      }
+                      },
+                      "description": "Override auto-generated env var names. Keys are the custom env var names to set, values are the default env var names to map from."
                     }
                   }
                 }
               },
               "searches": {
                 "type": "array",
+                "description": "Auto-injects Elasticsearch connection env vars: ELASTICSEARCH_HOST, ELASTICSEARCH_PORT, ELASTICSEARCH_USER, ELASTICSEARCH_PASSWORD, ELASTICSEARCH_URL.",
                 "items": {
                   "type": "object",
                   "additionalProperties": false,
                   "required": ["name", "type"],
                   "properties": {
                     "name": {
-                      "type": "string"
+                      "type": "string",
+                      "description": "Name of the search engine (must match a searches[].name entry)."
                     },
                     "type": {
                       "type": "string",
-                      "enum": ["elasticsearch"]
+                      "enum": ["elasticsearch"],
+                      "description": "Search engine type. Currently only 'elasticsearch' is supported."
                     },
                     "mappings": {
                       "type": "object",
                       "additionalProperties": {
                         "type": "string"
-                      }
+                      },
+                      "description": "Override auto-generated env var names."
                     }
                   }
                 }
               },
               "messageBrokers": {
                 "type": "array",
+                "description": "Auto-injects message broker connection env vars. For RabbitMQ: RABBITMQ_HOST, RABBITMQ_PORT, RABBITMQ_USER, RABBITMQ_PASSWORD, RABBITMQ_URL.",
                 "items": {
                   "type": "object",
                   "additionalProperties": false,
                   "required": ["name", "type"],
                   "properties": {
                     "name": {
-                      "type": "string"
+                      "type": "string",
+                      "description": "Name of the message broker (must match a messageBrokers[].name entry)."
                     },
                     "type": {
                       "type": "string",
-                      "enum": ["rabbitmq"]
+                      "enum": ["rabbitmq"],
+                      "description": "Broker type. Currently only 'rabbitmq' is supported."
                     },
                     "mappings": {
                       "type": "object",
                       "additionalProperties": {
                         "type": "string"
-                      }
+                      },
+                      "description": "Override auto-generated env var names."
                     }
                   }
                 }
@@ -949,12 +1086,15 @@
           "egress": {
             "type": "object",
             "additionalProperties": false,
+            "description": "Controls outbound traffic via CiliumNetworkPolicy egress rules. DNS, S3, MinIO, and intra-namespace traffic are always allowed regardless of these settings.",
             "properties": {
               "enabled": {
-                "type": "boolean"
+                "type": "boolean",
+                "description": "When false, blocks all egress traffic except DNS, S3, MinIO, and intra-namespace. Defaults to true (all egress allowed)."
               },
               "toCIDRs": {
                 "type": "array",
+                "description": "IP ranges this job is allowed to reach.",
                 "items": {
                   "type": "object",
                   "additionalProperties": false,
@@ -962,36 +1102,44 @@
                   "properties": {
                     "range": {
                       "type": "string",
-                      "pattern": "^([0-9]{1,3}\\.){3}[0-9]{1,3}/[0-9]{1,2}$"
+                      "pattern": "^([0-9]{1,3}\\.){3}[0-9]{1,3}/[0-9]{1,2}$",
+                      "description": "CIDR range to allow (e.g., '10.0.0.0/8')."
                     },
                     "port": {
-                      "type": "integer"
+                      "type": "integer",
+                      "description": "Optional port restriction. If omitted, all ports to this CIDR are allowed."
                     },
                     "protocol": {
                       "type": "string",
-                      "enum": ["TCP", "UDP"]
+                      "enum": ["TCP", "UDP"],
+                      "description": "Protocol for the port restriction. Defaults to TCP if port is specified."
                     }
                   }
                 }
               },
               "toFQDNs": {
                 "type": "array",
+                "description": "Domain names this job is allowed to reach.",
                 "items": {
                   "type": "object",
                   "additionalProperties": false,
                   "properties": {
                     "pattern": {
-                      "type": "string"
+                      "type": "string",
+                      "description": "Wildcard domain pattern to allow (e.g., '*.example.com'). Mutually exclusive with 'host'."
                     },
                     "host": {
-                      "type": "string"
+                      "type": "string",
+                      "description": "Exact domain name to allow (e.g., 'api.example.com'). Mutually exclusive with 'pattern'."
                     },
                     "port": {
-                      "type": "integer"
+                      "type": "integer",
+                      "description": "Optional port restriction. If omitted, all ports to this FQDN are allowed."
                     },
                     "protocol": {
                       "type": "string",
-                      "enum": ["TCP", "UDP"]
+                      "enum": ["TCP", "UDP"],
+                      "description": "Protocol for the port restriction. Defaults to TCP if port is specified."
                     }
                   },
                   "oneOf": [
@@ -1008,6 +1156,7 @@
     },
     "dbServers": {
       "type": "array",
+      "description": "Database server instances managed by Kubernetes operators. Supports MySQL (pxc), PostgreSQL (cnpg), Redis-compatible in-memory (dragonfly), MongoDB-compatible via PostgreSQL backend (ferretdb), and Percona MongoDB (psmdb). Each type creates operator-specific CRDs, auto-generated credentials, and backup configurations.",
       "items": {
         "type": "object",
         "additionalProperties": false,
@@ -1143,46 +1292,54 @@
         ],
         "properties": {
           "name": {
-            "type": "string"
+            "type": "string",
+            "description": "Unique name for the database server. Determines the Kubernetes service name used for connections: pxc creates '<name>-pxc', cnpg creates '<name>-rw' (write) and '<name>-r' (read), dragonfly creates '<name>', psmdb creates '<name>-mongos', ferretdb creates '<name>-ferretdb'."
           },
           "type": {
             "type": "string",
-            "enum": ["pxc", "cnpg", "dragonfly", "psmdb", "ferretdb"]
+            "enum": ["pxc", "cnpg", "dragonfly", "psmdb", "ferretdb"],
+            "description": "Database engine type. pxc: Percona XtraDB Cluster (MySQL). cnpg: CloudNativePG (PostgreSQL). dragonfly: Dragonfly (Redis-compatible in-memory store). psmdb: Percona Server for MongoDB. ferretdb: FerretDB (MongoDB-compatible API backed by a CNPG PostgreSQL cluster)."
           },
           "version": {
-            "type": "string"
+            "type": "string",
+            "description": "Database engine version. pxc: '5.7' or '8.0'. cnpg: PostgreSQL major or major.minor version (e.g., '16', '15.3'). ferretdb: PostgreSQL version for the underlying CNPG backend. psmdb: '7.0' or '8.0'. Not used by dragonfly."
           },
           "plan": {
             "type": "string",
-            "enum": ["pico", "nano", "micro", "small", "medium", "large", "xlarge", "2xlarge", "4xlarge"]
+            "enum": ["pico", "nano", "micro", "small", "medium", "large", "xlarge", "2xlarge", "4xlarge"],
+            "description": "Resource plan that determines CPU and memory requests/limits for database pods."
           },
           "size": {
             "type": "string",
-            "pattern": "^[0-9]+Gi$"
+            "pattern": "^[0-9]+Gi$",
+            "description": "Persistent volume storage size for database data (e.g., '20Gi', '100Gi'). Required for pxc, cnpg, ferretdb, and psmdb. Not used by dragonfly (in-memory only; use snapshot.size for optional persistence)."
           },
           "replicas": {
             "type": "integer",
             "minimum": 1,
             "maximum": 3,
-            "description": "Number of replicas. Default 1. Recommended 3 for production"
+            "description": "Number of database replicas. Defaults to 1. For cnpg: must be exactly 1, 3, or 5; replicas >1 enable synchronous replication. For pxc/psmdb: multi-replica setups use pod anti-affinity to spread across nodes."
           },
           "pause": {
             "type": "boolean",
-            "description": "When true, shuts down database without deleting data"
+            "description": "When true, hibernates the database cluster (stops all pods) without deleting persistent data. Available for pxc, cnpg, psmdb, and ferretdb. Set to false or remove to resume."
           },
           "expose": {
             "type": "object",
             "additionalProperties": false,
+            "description": "Exposes the database via a LoadBalancer Service, making it reachable from outside the cluster. Use sourceRanges to restrict access.",
             "properties": {
               "enabled": {
-                "type": "boolean"
+                "type": "boolean",
+                "description": "When true, creates a LoadBalancer Service for external database access."
               },
               "sourceRanges": {
                 "type": "array",
                 "items": {
                   "type": "string",
                   "pattern": "^([0-9]{1,3}\\.){3}[0-9]{1,3}/[0-9]{1,2}$"
-                }
+                },
+                "description": "CIDR ranges allowed to reach the database through the LoadBalancer. If omitted, all source IPs are allowed."
               }
             },
             "required": ["enabled"]
@@ -1190,19 +1347,23 @@
           "restoreFrom": {
             "type": "object",
             "additionalProperties": false,
+            "description": "Bootstraps the database by restoring from a backup of another database instance. The source database must have existing backups. Not available during global recovery mode.",
             "required": ["name"],
             "properties": {
               "name": {
-                "type": "string"
+                "type": "string",
+                "description": "Name of the source database whose backup will be used to restore this instance. Must be a database of the same type that has existing backups."
               }
             }
           },
           "memcached": {
             "type": "object",
             "additionalProperties": false,
+            "description": "Enables the memcached protocol interface on Dragonfly (port 11211). Dragonfly only.",
             "properties": {
               "enabled": {
-                "type": "boolean"
+                "type": "boolean",
+                "description": "When true, enables the memcached protocol on port 11211 in addition to the Redis protocol on port 6379."
               }
             },
             "required": [
@@ -1212,13 +1373,16 @@
           "snapshot": {
             "type": "object",
             "additionalProperties": false,
+            "description": "Enables periodic data snapshots to persistent storage for Dragonfly. Snapshots run every 5 minutes. Dragonfly only.",
             "properties": {
               "enabled": {
-                "type": "boolean"
+                "type": "boolean",
+                "description": "When true, enables periodic snapshots to a PersistentVolumeClaim, allowing data survival across pod restarts."
               },
               "size": {
                 "type": "string",
-                "pattern": "^[0-9]+Gi$"
+                "pattern": "^[0-9]+Gi$",
+                "description": "PVC storage size for snapshot data (e.g., '10Gi'). Required when snapshot is enabled."
               }
             },
             "required": [
@@ -1229,9 +1393,11 @@
           "passwordAuth": {
             "type": "object",
             "additionalProperties": false,
+            "description": "Enables password authentication for Dragonfly. When enabled, a random password is auto-generated and stored in a Kubernetes Secret. Dragonfly only.",
             "properties": {
               "enabled": {
-                "type": "boolean"
+                "type": "boolean",
+                "description": "When true, requires password authentication for Redis protocol connections. The password is auto-generated and injected as REDIS_PASSWORD into referencing services."
               }
             },
             "required": [
@@ -1243,94 +1409,109 @@
             "items": {
               "type": "string"
             },
-            "description": "List of PostgreSQL extensions to enable (cnpg only)"
+            "description": "PostgreSQL extensions to enable in the CNPG cluster (e.g., 'pgvector', 'pg_trgm', 'hstore'). cnpg only."
           },
           "postgresqlConf": {
             "type": "object",
             "additionalProperties": {
               "type": "string"
             },
-            "description": "PostgreSQL configuration parameters (cnpg only)"
+            "description": "Custom PostgreSQL configuration parameters passed to the CNPG cluster (e.g., {'shared_buffers': '256MB', 'max_connections': '200'}). cnpg only."
           }
         }
       }
     },
     "searches": {
       "type": "array",
+      "description": "Search engine instances managed by the Elastic Cloud on Kubernetes (ECK) operator. Creates an Elasticsearch cluster with separate master and data node pools, auto-generated credentials, and optional Kibana dashboard.",
       "items": {
         "type": "object",
         "additionalProperties": false,
         "required": ["name", "type", "version", "nodes"],
         "properties": {
           "name": {
-            "type": "string"
+            "type": "string",
+            "description": "Unique name for the Elasticsearch cluster. The HTTP service endpoint will be '<name>-es-http' on port 9200."
           },
           "type": {
             "type": "string",
-            "enum": ["elasticsearch"]
+            "enum": ["elasticsearch"],
+            "description": "Search engine type. Currently only 'elasticsearch' is supported."
           },
           "version": {
             "type": "string",
             "pattern": "^\\d+(\\.\\d+(\\.\\d+)?)?$",
-            "description": "May be a number like '8', major/minor like '8.15' or major/minor/sub like '8.15.2'"
+            "description": "Elasticsearch version. Can be major only ('8'), major.minor ('8.15'), or major.minor.patch ('8.15.2')."
           },
           "expose": {
             "type": "object",
             "additionalProperties": false,
+            "description": "Exposes the Elasticsearch HTTP endpoint via a LoadBalancer Service for external access.",
             "required": ["enabled"],
             "properties": {
               "enabled": {
-                "type": "boolean"
+                "type": "boolean",
+                "description": "When true, creates a LoadBalancer Service for the Elasticsearch HTTP port (9200)."
               },
               "sourceRanges": {
                 "type": "array",
                 "items": {
                   "type": "string",
                   "pattern": "^([0-9]{1,3}\\.){3}[0-9]{1,3}/[0-9]{1,2}$"
-                }
+                },
+                "description": "CIDR ranges allowed to reach Elasticsearch through the LoadBalancer. If omitted, all source IPs are allowed."
               }
             }
           },
           "nodes": {
             "type": "object",
             "additionalProperties": false,
+            "description": "Node pool configuration. Elasticsearch is deployed with separate master and data node pools. Master nodes handle cluster coordination; data nodes handle indexing, search, and storage.",
             "required": ["master", "data"],
             "properties": {
               "master": {
                 "type": "object",
                 "additionalProperties": false,
+                "description": "Master node pool. Handles cluster state, shard allocation, and coordination. Master nodes are deployed with required anti-affinity across hosts.",
                 "required": ["plan", "size"],
                 "properties": {
                   "replicas": {
                     "type": "integer",
-                    "default": 3
+                    "default": 3,
+                    "description": "Number of master nodes. Defaults to 3. Should be an odd number (1, 3, 5) for proper quorum."
                   },
                   "plan": {
                     "type": "string",
-                    "enum": ["pico", "nano", "micro", "small", "medium", "large", "xlarge", "2xlarge", "4xlarge"]
+                    "enum": ["pico", "nano", "micro", "small", "medium", "large", "xlarge", "2xlarge", "4xlarge"],
+                    "description": "Resource plan that determines CPU and memory for master nodes."
                   },
                   "size": {
                     "type": "string",
-                    "pattern": "^[0-9]+Gi$"
+                    "pattern": "^[0-9]+Gi$",
+                    "description": "Persistent volume storage size for master node data (e.g., '10Gi')."
                   }
                 }
               },
               "data": {
                 "type": "object",
                 "additionalProperties": false,
+                "description": "Data node pool. Handles indexing, search queries, and data storage. Data nodes are assigned all non-master roles (data, ingest, remote_cluster_client, ml, transform).",
                 "required": ["plan", "size"],
                 "properties": {
                   "replicas": {
                     "type": "integer",
-                    "default": 3
+                    "default": 3,
+                    "description": "Number of data nodes. Defaults to 3."
                   },
                   "plan": {
                     "type": "string",
-                    "enum": ["pico", "nano", "micro", "small", "medium", "large", "xlarge", "2xlarge", "4xlarge"]
+                    "enum": ["pico", "nano", "micro", "small", "medium", "large", "xlarge", "2xlarge", "4xlarge"],
+                    "description": "Resource plan that determines CPU and memory for data nodes."
                   },
                   "size": {
                     "type": "string",
-                    "pattern": "^[0-9]+Gi$"
+                    "pattern": "^[0-9]+Gi$",
+                    "description": "Persistent volume storage size for data node indices (e.g., '100Gi')."
                   }
                 }
               }
@@ -1339,25 +1520,30 @@
           "dashboard": {
             "type": "object",
             "additionalProperties": false,
+            "description": "Deploys a Kibana instance connected to this Elasticsearch cluster for data visualization and management.",
             "required": ["enabled", "plan"],
             "properties": {
               "enabled": {
-                "type": "boolean"
+                "type": "boolean",
+                "description": "When true, deploys a Kibana instance connected to this Elasticsearch cluster."
               },
               "sourceRanges": {
                 "type": "array",
                 "items": {
                   "type": "string",
                   "pattern": "^([0-9]{1,3}\\.){3}[0-9]{1,3}/[0-9]{1,2}$"
-                }
+                },
+                "description": "CIDR ranges allowed to access the Kibana dashboard. If omitted, all source IPs are allowed."
               },
               "replicas": {
                 "type": "integer",
-                "default": 1
+                "default": 1,
+                "description": "Number of Kibana pod replicas. Defaults to 1."
               },
               "plan": {
                 "type": "string",
-                "enum": ["pico", "nano", "micro", "small", "medium", "large", "xlarge", "2xlarge", "4xlarge"]
+                "enum": ["pico", "nano", "micro", "small", "medium", "large", "xlarge", "2xlarge", "4xlarge"],
+                "description": "Resource plan that determines CPU and memory for the Kibana pod."
               }
             }
           }
@@ -1366,26 +1552,30 @@
     },
     "volumes": {
       "type": "array",
+      "description": "Persistent Volume Claims (PVCs) with ReadWriteOnce (RWO) access mode. Volumes are automatically included in k8up backup schedules. Mount them into services, cronjobs, or jobs via mountVolumes.",
       "items": {
         "type": "object",
         "additionalProperties": false,
         "required": ["name", "size"],
         "properties": {
           "name": {
-            "type": "string"
+            "type": "string",
+            "description": "Unique name for the PVC. Referenced by mountVolumes[].name in services, cronjobs, and jobs."
           },
           "size": {
             "type": "string",
-            "pattern": "^[0-9]+Gi$"
+            "pattern": "^[0-9]+Gi$",
+            "description": "Storage capacity for the PVC (e.g., '10Gi', '100Gi')."
           },
           "restoreFrom": {
             "type": "object",
             "additionalProperties": false,
+            "description": "Restores volume data from a restic backup at PVC creation time. Creates a restore Job that pulls the latest snapshot from S3-compatible storage.",
             "required": ["name"],
             "properties": {
               "name": {
                 "type": "string",
-                "description": "Name of the volume backup to restore from"
+                "description": "Name of the source volume whose backup will be restored. Must have existing restic snapshots in the backup bucket."
               }
             }
           }
@@ -1394,47 +1584,55 @@
     },
     "configmaps": {
       "type": "array",
+      "description": "Kubernetes ConfigMaps for storing non-sensitive configuration data. Can be mounted as files (via mountConfigMaps) or injected as environment variables (via envVarsFrom.configMaps).",
       "items": {
         "type": "object",
         "additionalProperties": false,
         "required": ["name", "data"],
         "properties": {
           "name": {
-            "type": "string"
+            "type": "string",
+            "description": "Unique name for the ConfigMap. Referenced by mountConfigMaps[].name and envVarsFrom.configMaps[].name."
           },
           "data": {
             "type": "object",
             "additionalProperties": {
               "type": "string"
-            }
+            },
+            "description": "Key-value pairs for the ConfigMap. Each key becomes a file name (when mounted) or env var name (when injected). Values are the file contents or env var values."
           }
         }
       }
     },
     "secrets": {
       "type": "array",
+      "description": "Bitnami SealedSecrets for storing sensitive data. Values must be pre-encrypted with the sealed-secrets controller's public key before adding to the blueprint. The controller decrypts them into regular Kubernetes Secrets at deploy time.",
       "items": {
         "type": "object",
         "additionalProperties": false,
         "required": ["name", "namespace", "data"],
         "properties": {
           "name": {
-            "type": "string"
+            "type": "string",
+            "description": "Name of the Secret (after the SealedSecret is decrypted by the controller). Referenced by envVarsFrom.secrets[].name."
           },
           "namespace": {
-            "type": "string"
+            "type": "string",
+            "description": "Target namespace for the Secret. Must match the namespace where the blueprint is deployed; a validation error occurs on mismatch."
           },
           "data": {
             "type": "object",
             "additionalProperties": {
               "type": "string"
-            }
+            },
+            "description": "Encrypted key-value pairs. Each key becomes a Secret data key, each value must be the base64-encoded ciphertext produced by kubeseal."
           }
         }
       }
     },
     "messageBrokers": {
       "type": "array",
+      "description": "Message broker instances managed by Kubernetes operators. Creates a RabbitMQ cluster with auto-generated credentials, persistent storage, pod anti-affinity, and a PodDisruptionBudget.",
       "items": {
         "type": "object",
         "additionalProperties": false,
@@ -1442,42 +1640,45 @@
         "properties": {
           "name": {
             "type": "string",
-            "description": "Unique name for the message broker"
+            "description": "Unique name for the message broker. The Kubernetes service will be '<name>-rabbitmq'. Credentials are auto-generated in a Secret named '<name>-rabbitmq-default-user'."
           },
           "type": {
             "type": "string",
             "enum": ["rabbitmq"],
-            "description": "Type of message broker"
+            "description": "Broker type. Currently only 'rabbitmq' is supported."
           },
           "plan": {
             "type": "string",
             "enum": ["pico", "nano", "micro", "small", "medium", "large", "xlarge", "2xlarge", "4xlarge"],
-            "description": "Resource plan for the message broker"
+            "description": "Resource plan that determines CPU and memory requests/limits for broker pods."
           },
           "size": {
             "type": "string",
             "pattern": "^[0-9]+Gi$",
-            "description": "Storage size for the message broker"
+            "description": "Persistent volume storage size for message persistence (e.g., '10Gi')."
           },
           "replicas": {
             "type": "integer",
             "minimum": 1,
             "default": 3,
-            "description": "Number of replicas. Default 3"
+            "description": "Number of RabbitMQ cluster nodes. Defaults to 3. Uses pod anti-affinity to spread across hosts and pause_minority partition handling."
           },
           "expose": {
             "type": "object",
             "additionalProperties": false,
+            "description": "Exposes the RabbitMQ AMQP port via a LoadBalancer Service for external access.",
             "properties": {
               "enabled": {
-                "type": "boolean"
+                "type": "boolean",
+                "description": "When true, creates a LoadBalancer Service for external RabbitMQ access."
               },
               "sourceRanges": {
                 "type": "array",
                 "items": {
                   "type": "string",
                   "pattern": "^([0-9]{1,3}\\.){3}[0-9]{1,3}/[0-9]{1,2}$"
-                }
+                },
+                "description": "CIDR ranges allowed to reach the broker through the LoadBalancer. If omitted, all source IPs are allowed."
               }
             },
             "required": ["enabled"]
@@ -1488,21 +1689,23 @@
     "alerting": {
       "type": "object",
       "additionalProperties": false,
+      "description": "Configures alert routing for this blueprint via Prometheus AlertmanagerConfig. When enabled, alerts matching this namespace are routed to the specified Slack channel.",
       "required": ["enabled"],
       "properties": {
         "enabled": {
           "type": "boolean",
           "default": true,
-          "description": "Enable alerting for this blueprint"
+          "description": "When true, creates an AlertmanagerConfig that routes alerts for this namespace to the configured Slack channel. Alerts are grouped by alertname with 5-minute intervals and 1-hour repeat."
         },
         "slack": {
           "type": "object",
           "additionalProperties": false,
+          "description": "Slack notification configuration for alerts.",
           "required": ["channel"],
           "properties": {
             "channel": {
               "type": "string",
-              "description": "Slack channel for alerts (e.g., '#my-app-alerts')"
+              "description": "Slack channel where alerts will be sent (e.g., '#my-app-alerts'). Required when alerting is enabled."
             }
           }
         }
