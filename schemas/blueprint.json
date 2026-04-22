@@ -1710,6 +1710,29 @@
           }
         }
       }
+    },
+    "users": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Per-namespace user access control. Users listed here get Kubernetes RoleBindings in this namespace and ArgoCD AppProject role mappings for this project.",
+      "properties": {
+        "view": {
+          "type": "array",
+          "description": "Read-only access. Kubernetes: built-in 'view' ClusterRole scoped to this namespace. ArgoCD: view and sync applications in this project.",
+          "items": {
+            "type": "string",
+            "description": "OIDC username (e.g. 'alice@company.com')."
+          }
+        },
+        "debug": {
+          "type": "array",
+          "description": "Debug access (superset of view). Kubernetes: 'view' plus exec into pods, get secrets, port-forward, and scale deployments/statefulsets. ArgoCD: view, sync, exec, and trigger actions on applications in this project.",
+          "items": {
+            "type": "string",
+            "description": "OIDC username (e.g. 'alice@company.com')."
+          }
+        }
+      }
     }
   }
 }
