@@ -1222,6 +1222,10 @@
                 "version": {
                   "type": "string",
                   "enum": ["7.0", "8.0"]
+                },
+                "plan": {
+                  "enum": ["micro", "small", "medium", "large", "xlarge", "2xlarge", "4xlarge"],
+                  "description": "Resource plan for the MongoDB data nodes. Minimum is 'micro' (1 CPU / 1Gi); smaller plans cause CPU throttling and probe-timeout restart loops on psmdb."
                 }
               }
             }
@@ -1649,8 +1653,8 @@
           },
           "plan": {
             "type": "string",
-            "enum": ["pico", "nano", "micro", "small", "medium", "large", "xlarge", "2xlarge", "4xlarge"],
-            "description": "Resource plan that determines CPU and memory requests/limits for broker pods."
+            "enum": ["micro", "small", "medium", "large", "xlarge", "2xlarge", "4xlarge"],
+            "description": "Resource plan that determines CPU and memory requests/limits for broker pods. Minimum is 'micro' (1 CPU / 1Gi); smaller plans cause CPU throttling and probe-timeout restart loops on RabbitMQ."
           },
           "size": {
             "type": "string",
