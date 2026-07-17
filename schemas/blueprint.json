@@ -21,7 +21,7 @@
           },
           "plan": {
             "type": "string",
-            "enum": ["pico", "nano", "micro", "small", "medium", "large", "xlarge", "2xlarge", "4xlarge"],
+            "enum": ["pico", "nano", "micro", "small", "medium", "large", "xlarge", "2xlarge", "3xlarge", "4xlarge"],
             "description": "Resource plan that determines CPU and memory requests/limits for the container. Plans are predefined tiers from pico (smallest) to 4xlarge (largest)."
           },
           "port": {
@@ -561,7 +561,7 @@
           },
           "plan": {
             "type": "string",
-            "enum": ["pico", "nano", "micro", "small", "medium", "large", "xlarge", "2xlarge", "4xlarge"],
+            "enum": ["pico", "nano", "micro", "small", "medium", "large", "xlarge", "2xlarge", "3xlarge", "4xlarge"],
             "description": "Resource plan that determines CPU and memory requests/limits for the container."
           },
           "command": {
@@ -879,7 +879,7 @@
           },
           "plan": {
             "type": "string",
-            "enum": ["pico", "nano", "micro", "small", "medium", "large", "xlarge", "2xlarge", "4xlarge"],
+            "enum": ["pico", "nano", "micro", "small", "medium", "large", "xlarge", "2xlarge", "3xlarge", "4xlarge"],
             "description": "Resource plan that determines CPU and memory requests/limits for the container."
           },
           "hook": {
@@ -1224,7 +1224,7 @@
                   "enum": ["7.0", "8.0"]
                 },
                 "plan": {
-                  "enum": ["micro", "small", "medium", "large", "xlarge", "2xlarge", "4xlarge"],
+                  "enum": ["micro", "small", "medium", "large", "xlarge", "2xlarge", "3xlarge", "4xlarge"],
                   "description": "Resource plan for the MongoDB data nodes. Minimum is 'micro' (1 CPU / 1Gi); smaller plans cause CPU throttling and probe-timeout restart loops on psmdb."
                 }
               }
@@ -1310,7 +1310,7 @@
           },
           "plan": {
             "type": "string",
-            "enum": ["pico", "nano", "micro", "small", "medium", "large", "xlarge", "2xlarge", "4xlarge"],
+            "enum": ["pico", "nano", "micro", "small", "medium", "large", "xlarge", "2xlarge", "3xlarge", "4xlarge"],
             "description": "Resource plan that determines CPU and memory requests/limits for database pods."
           },
           "size": {
@@ -1486,7 +1486,7 @@
                   },
                   "plan": {
                     "type": "string",
-                    "enum": ["pico", "nano", "micro", "small", "medium", "large", "xlarge", "2xlarge", "4xlarge"],
+                    "enum": ["pico", "nano", "micro", "small", "medium", "large", "xlarge", "2xlarge", "3xlarge", "4xlarge"],
                     "description": "Resource plan that determines CPU and memory for master nodes."
                   },
                   "size": {
@@ -1509,7 +1509,7 @@
                   },
                   "plan": {
                     "type": "string",
-                    "enum": ["pico", "nano", "micro", "small", "medium", "large", "xlarge", "2xlarge", "4xlarge"],
+                    "enum": ["pico", "nano", "micro", "small", "medium", "large", "xlarge", "2xlarge", "3xlarge", "4xlarge"],
                     "description": "Resource plan that determines CPU and memory for data nodes."
                   },
                   "size": {
@@ -1546,7 +1546,7 @@
               },
               "plan": {
                 "type": "string",
-                "enum": ["pico", "nano", "micro", "small", "medium", "large", "xlarge", "2xlarge", "4xlarge"],
+                "enum": ["pico", "nano", "micro", "small", "medium", "large", "xlarge", "2xlarge", "3xlarge", "4xlarge"],
                 "description": "Resource plan that determines CPU and memory for the Kibana pod."
               }
             }
@@ -1653,7 +1653,7 @@
           },
           "plan": {
             "type": "string",
-            "enum": ["micro", "small", "medium", "large", "xlarge", "2xlarge", "4xlarge"],
+            "enum": ["micro", "small", "medium", "large", "xlarge", "2xlarge", "3xlarge", "4xlarge"],
             "description": "Resource plan that determines CPU and memory requests/limits for broker pods. Minimum is 'micro' (1 CPU / 1Gi); smaller plans cause CPU throttling and probe-timeout restart loops on RabbitMQ."
           },
           "size": {
