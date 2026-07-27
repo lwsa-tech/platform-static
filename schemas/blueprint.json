@@ -163,11 +163,11 @@
           "ingress": {
             "type": "object",
             "additionalProperties": false,
-            "description": "Creates a Kubernetes Ingress resource to expose the service via HTTPS through the ingress-nginx controller. Automatically provisions TLS certificates for configured hosts.",
+            "description": "Exposes the service externally via HTTPS. TLS certificates are provisioned automatically for the configured hosts.",
             "properties": {
               "enabled": {
                 "type": "boolean",
-                "description": "When true, creates an Ingress resource that routes external HTTPS traffic to this service's primary port."
+                "description": "When true, routes external HTTPS traffic to this service's primary port."
               },
               "hosts": {
                 "type": "array",
@@ -182,7 +182,7 @@
                   "type": "string",
                   "pattern": "^([0-9]{1,3}\\.){3}[0-9]{1,3}/[0-9]{1,2}$"
                 },
-                "description": "CIDR ranges allowed to access the Ingress. If omitted, all source IPs are allowed."
+                "description": "CIDR ranges allowed to access the service. If omitted, all source IPs are allowed."
               }
             },
             "required": ["enabled"]
