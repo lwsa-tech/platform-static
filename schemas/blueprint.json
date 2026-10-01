@@ -1238,7 +1238,11 @@
             },
             "then": {
               "properties": {
-                "size": false
+                "size": false,
+                "plan": {
+                  "enum": ["nano", "micro", "small", "medium", "large", "xlarge", "2xlarge", "3xlarge", "4xlarge"],
+                  "description": "Resource plan for Dragonfly. Minimum is 'nano' (512Mi); smaller plans leave the default maxmemory (80% of the memory limit) below the 256Mi required per proactor thread and cannot start."
+                }
               }
             }
           },
