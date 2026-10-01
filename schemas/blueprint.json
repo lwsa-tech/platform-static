@@ -545,7 +545,7 @@
     },
     "cronjobs": {
       "type": "array",
-      "description": "Scheduled workloads deployed as Kubernetes CronJobs. Each cronjob gets a CiliumNetworkPolicy for traffic control. Pods use restartPolicy: OnFailure with a 3-day active deadline.",
+      "description": "Scheduled workloads deployed as Kubernetes CronJobs. Each cronjob gets a CiliumNetworkPolicy for traffic control. Concurrent executions are forbidden (concurrencyPolicy: Forbid). Pods use restartPolicy: OnFailure, and each Job has a 6-hour active deadline.",
       "items": {
         "type": "object",
         "additionalProperties": false,
